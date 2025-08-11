@@ -96,7 +96,7 @@ theme <- bslib::bs_add_rules(theme, "
   }
 ")
 
-# Sidebar card header padding (instead of inline styles)
+# Sidebar card header padding
 theme <- bslib::bs_add_rules(theme, "
   .sidebar-card .card-header {
     padding-top: 1rem !important;
@@ -115,6 +115,14 @@ theme <- bslib::bs_add_rules(theme, "
   .results-right-box {
     border-left: 1px solid var(--bs-border-color);
     padding-left: 15px;
+  }
+  "
+)
+
+# Gap spacing
+theme <- bslib::bs_add_rules(theme, "
+  .bslib-gap-spacing {
+    gap: none;
   }
   "
 )
