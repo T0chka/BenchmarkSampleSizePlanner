@@ -417,6 +417,11 @@ ui <- page_navbar(
       col_widths = c(12, 12)
     )
     
+  ),
+  footer = div(
+    style = "text-align: center; padding: 1rem; 
+           font-size: 0.85rem; color: #6c757d",
+    "Version 1.0 | © 2025 Antonina Dolgorukova"
   )
 )
 
