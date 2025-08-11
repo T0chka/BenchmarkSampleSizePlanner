@@ -11,6 +11,8 @@ theme <- bs_theme(
   version = 5,
   bootswatch = "flatly",
   primary = "#0B7285",
+  "nav-link-color" = "bs-primary-text-emphasis",
+  
   base_font = font_google("Inter"),
   code_font  = font_google("Fira Mono"),
   heading_font = font_google("Inter")
@@ -24,10 +26,6 @@ theme <- bslib::bs_add_rules(
   
   /* Ensure no special-casing for last block margins */
   .input-block:last-child { margin-bottom: .75rem !important; }
-  
-  /* Normalize spacing between radio/checkbox rows across themes */
-  .shiny-input-container .shiny-options-group .form-check { margin-bottom: .25rem; }
-  .shiny-input-container .shiny-options-group .form-check:last-child { margin-bottom: 0; }
   
   /* Match card-header style to accordion-button */
   .card-header {
@@ -47,6 +45,23 @@ theme <- bslib::bs_add_rules(
   }
   "
 )
+
+# remove default extra borders on active accordion-button
+theme <- bs_add_rules(theme, "
+  .accordion-button {
+    border: none !important;
+    box-shadow: none !important;
+  }
+  .accordion-button:not(.collapsed) {
+    border: none !important;
+    box-shadow: none !important;
+  }
+  .accordion-button:focus {
+    border: none !important;
+    box-shadow: none !important;
+    outline: none !important;
+  }
+")
 
 ui <- page_navbar(
   theme = theme,
@@ -277,7 +292,7 @@ ui <- page_navbar(
             "so you compare your planned study’s detectable effect to something with ",
             "known clinical relevance."
           ),
-          strong("Two ways to use it:"),
+          p("Two ways to use it:"),
           tags$ol(
             tags$li(
               HTML(
