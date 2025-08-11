@@ -72,6 +72,9 @@ theme <- bslib::bs_add_rules(theme, "
     padding-top: 0.5rem !important;
     padding-bottom: 0.5rem !important;
     border-top: 1px solid var(--bs-border-color);
+    text-align: center;
+    font-size: 0.85rem;
+    color: #6c757d;
   }
   "
 )
@@ -92,3 +95,33 @@ theme <- bslib::bs_add_rules(theme, "
     outline: none !important;
   }
 ")
+
+# Sidebar card header padding (instead of inline styles)
+theme <- bslib::bs_add_rules(theme, "
+  .sidebar-card .card-header {
+    padding-top: 1rem !important;
+    padding-bottom: 0.5rem !important;
+  }
+  "
+)
+
+# Results header row layout and right-side box divider
+theme <- bslib::bs_add_rules(theme, "
+  .results-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .results-right-box {
+    border-left: 1px solid var(--bs-border-color);
+    padding-left: 15px;
+  }
+  "
+)
+
+# Help hint and info icon styles for tooltips
+theme <- bslib::bs_add_rules(theme, "
+  .help-hint { cursor: help; }
+  .info-icon { cursor: help; font-weight: 600; }
+  "
+)

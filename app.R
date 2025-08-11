@@ -27,8 +27,7 @@ ui <- page_navbar(
     card(
       class = "sidebar-card",
       card_header(
-        "Settings",
-        style = "padding-top:1rem; padding-bottom:.5rem;"
+        "Settings"
       ),
 
       # Dataset choice
@@ -87,7 +86,7 @@ ui <- page_navbar(
                     "100%: your target effect is at least as large as ",
                     "the benchmark (pooled MD from the dataset)."
                   ),
-                  style = "cursor: help;"
+                  class = "help-hint"
                 )
               ),
               tagList(
@@ -95,7 +94,7 @@ ui <- page_navbar(
                 tags$span(
                   "(≈80%)",
                   title = "80% of the dataset benchmark MD.",
-                  style = "cursor: help;"
+                  class = "help-hint"
                 )
               ),
               tagList(
@@ -103,7 +102,7 @@ ui <- page_navbar(
                 tags$span(
                   "(≈50%)",
                   title = "50% of the dataset benchmark MD.",
-                  style = "cursor: help;"
+                  class = "help-hint"
                 )
               )
             ),
@@ -127,7 +126,7 @@ ui <- page_navbar(
                   title = paste0(
                     "20th percentile of pooled SD in the loaded dataset."
                   ),
-                  style = "cursor: help;"
+                  class = "help-hint"
                 )
               ),
               tagList(
@@ -137,7 +136,7 @@ ui <- page_navbar(
                   title = paste0(
                     "50th percentile (median) of pooled SD in the dataset."
                   ),
-                  style = "cursor: help;"
+                  class = "help-hint"
                 )
               ),
               tagList(
@@ -147,7 +146,7 @@ ui <- page_navbar(
                   title = paste0(
                     "80th percentile of pooled SD in the loaded dataset."
                   ),
-                  style = "cursor: help;"
+                  class = "help-hint"
                 )
               )
             ),
@@ -171,7 +170,7 @@ ui <- page_navbar(
                     "80% power is a solid default unless you know exactly ",
                     "why you’d change it"
                   ),
-                  style = "cursor: help; font-weight: 600;"
+                  class = "info-icon"
                 )
               )
             ),
@@ -198,14 +197,13 @@ ui <- page_navbar(
             input.outcome && input.outcome.length > 0 && \
             input.effect_level && input.effect_level.length > 0 && \
             input.sd_bucket && input.sd_bucket.length > 0",
-            div(style = "display: flex; justify-content: space-between; 
-                 align-items: center;",
+            div(class = "results-header-row",
                 div(
                   h5("Selected inputs for calculation"),
                   uiOutput("calc_summary")
                 ),
                 div(
-                  style = "border-left: 1px solid #ddd; padding-left: 15px;",
+                  class = "results-right-box",
                   h4(textOutput("n_out"))
                 )
             )
@@ -365,8 +363,6 @@ ui <- page_navbar(
   ),
   footer = div(
     class = "app-footer",
-    style = "text-align: center; padding: 1rem; 
-           font-size: 0.85rem; color: #6c757d",
     "Version 1.0 | © 2025 Antonina Dolgorukova"
   )
 )
