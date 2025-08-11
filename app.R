@@ -8,47 +8,87 @@ library(shinycssloaders)
 source("utils.R")
 
 theme <- bs_theme(
-  version = 5, bootswatch = "flatly",
+  version = 5,
+  bootswatch = "flatly",
   primary = "#0B7285",
   base_font = font_google("Inter"),
   code_font  = font_google("Fira Mono"),
   heading_font = font_google("Inter")
 )
-theme <- bslib::bs_add_rules(theme, "
-  /* shrink the tabbed navset header on the right */
-  .bslib-navs-card > .card-header { padding-top: .6rem; padding-bottom: .6rem; }
-  .bslib-navs-card .card-body      { padding-top: .75rem; }
-  /* tighten gap between the two columns */
-  .cols-tight { gap: .5rem; }
-")
+
+theme <- bslib::bs_add_rules(
+  theme,
+  "/* Left panel input blocks: consistent spacing */
+  .input-block { margin-bottom: .75rem; display: flow-root; }
+  .input-block > h5 { margin: 0 0 .25rem 0; font-size: 1.25rem; }
+  
+  /* Ensure no special-casing for last block margins */
+  .input-block:last-child { margin-bottom: .75rem !important; }
+  
+  /* Normalize spacing between radio/checkbox rows across themes */
+  .shiny-input-container .shiny-options-group .form-check { margin-bottom: .25rem; }
+  .shiny-input-container .shiny-options-group .form-check:last-child { margin-bottom: 0; }
+  
+  /* Match card-header style to accordion-button */
+  .card-header {
+    background-color: var(--bs-primary-bg-subtle);
+    color: var(--bs-primary-text-emphasis);
+  }
+  /* Compact navbar */
+  .navbar .navbar-brand {
+    margin: 0 !important;
+  }
+
+  .navbar .navbar-brand .name-title {
+  font-size: 2rem;
+  }
+  .navbar .navbar-brand .name-subtitle {
+  font-size: 1rem; font-weight: 400; color: var(--bs-gray-500);
+  }
+  "
+)
 
 ui <- page_navbar(
   theme = theme,
-  title = "Sample Size Calculator for the EMTVN",
+  title = tags$div(
+    class = "app-name",
+    tags$div(class = "name-title",   "Preclinical Sample Size Planner"),
+    tags$div(
+      class = "name-subtitle",
+      "Goodbye guesswork, hello clinically-proven benchmarks"
+    )
+  ),
   fillable = TRUE,
-  card(
-    layout_columns(
-      col_widths = c(3, 9),
-      class = "cols-tight",
+  layout_columns(
+    col_widths = c(3, 9),
+    class = "cols-tight mt-3",
+    
+    ## LEFT: Settings
+    card(
+      card_header(
+        "Settings",
+        style = "padding-top:1rem; padding-bottom:.5rem;"
+      ),
       
-      ## LEFT: Settings
-      card(
-        card_header("Settings", style = "padding-top:1rem; padding-bottom:.5rem;"),
-        
-        # Dataset choice
+      # Dataset choice
+      div(
+        class = "input-block",
         radioButtons(
           inputId = "data_source",
           label   = tags$h5("Dataset for meta-analysis"),
           choices = c(
-            "Curated EMTVN dataset (from the paper)" = "paper",
-            "Upload dataset"                         = "custom"
+            "Curated EMTVN dataset" = "paper",
+            "Upload dataset"        = "custom"
           ),
           selected = "paper"
-        ),
-        
-        # Upload UI (only when uploading)
-        conditionalPanel(
-          condition = "input.data_source == 'custom' && output.data_ready != 1",
+        )
+      ),
+      
+      # Upload UI (only when uploading)
+      conditionalPanel(
+        condition = "input.data_source == 'custom' && output.data_ready != 1",
+        div(
+          class = "input-block",
           fileInput("file", "Upload .xlsx file", accept = ".xlsx"),
           textInput("sheet", "Sheet name", value = ""),
           div(
@@ -60,16 +100,20 @@ ui <- page_navbar(
             strong("Optional columns:"),
             tags$ul(tags$li("Character: Drug, Reference"))
           ),
-          actionButton("load_data", "Load data", class = "btn btn-primary")
-        ),
+          actionButton("load_data", "Load data",
+                       class = "btn btn-primary")
+        )
+      ),
+      
+      # Outcome + planning choices (after data ready or default)
+      conditionalPanel(
+        condition = "output.data_ready == 1 || input.data_source == 'paper'",
         
-        # Outcome + planning choices (after data ready or default)
-        conditionalPanel(
-          condition = "output.data_ready == 1 || input.data_source == 'paper'",
-          
-          uiOutput("outcome_picker"),
-          
-          # EFFECT target: discrete buckets
+        uiOutput("outcome_picker"),
+        
+        # EFFECT target: discrete buckets
+        div(
+          class = "input-block",
           radioButtons(
             inputId = "effect_level",
             label   = tags$h5("Target effect to detect"),
@@ -105,9 +149,12 @@ ui <- page_navbar(
             choiceValues = c("large", "medium", "small"),
             selected = "large",
             inline = FALSE
-          ),
-          
-          # POOLED SD: percentile buckets
+          )
+        ),
+        
+        # POOLED SD: percentile buckets
+        div(
+          class = "input-block",
           radioButtons(
             inputId = "sd_bucket",
             label   = tags$h5("Expected variability"),
@@ -146,9 +193,12 @@ ui <- page_navbar(
             choiceValues = c("p20", "p50", "p80"),
             selected = "p80",
             inline = FALSE
-          ),
-          
-          # Power
+          )
+        ),
+        
+        # Power
+        div(
+          class = "input-block",
           radioButtons(
             inputId = "power",
             label = tags$h5(
@@ -173,171 +223,30 @@ ui <- page_navbar(
             selected = "0.80"
           )
         )
-      ),
-      
-      ## RIGHT: Tabs
+      )
+    ),
+    
+    ## RIGHT: Tabs
+    layout_columns(
       navset_card_tab(
         nav_panel(
           "Results",
           conditionalPanel(
             condition =
-            "input.data_source && input.data_source.length > 0 && \
+              "input.data_source && input.data_source.length > 0 && \
             input.outcome && input.outcome.length > 0 && \
             input.effect_level && input.effect_level.length > 0 && \
             input.sd_bucket && input.sd_bucket.length > 0",
-            card(
-              div(style = "display: flex; justify-content: space-between; 
+            div(style = "display: flex; justify-content: space-between; 
                  align-items: center;",
-                  div(
-                    h6("Selected inputs for calculation"),
-                    uiOutput("calc_summary")
-                  ),
-                  div(
-                    style = "border-left: 1px solid #ddd; padding-left: 15px;",
-                    h4(textOutput("n_out"))
-                  )
-              )
-            )
-          ),
-          
-          bslib::accordion(
-            bslib::accordion_panel(
-              tags$h5("Quick start"),
-              p(
-                "This app turns a set of experiment-level effect sizes into",
-                " a pooled benchmark (via meta-analysis) and then uses it",
-                " to compute simple size (animals per group) for a new study."
-              ),
-              p(
-                "The goal is to plan for detecting a biologically meaningful effect — one ",
-                "that is large enough to be relevant and, ideally, predictive of ",
-                "translating into an effective treatment."
-              ),
-              p(
-                "We set that target effect using human-proven drugs as a benchmark, ",
-                "so you compare your planned study’s detectable effect to something with ",
-                "known clinical relevance."
-              ),
-              strong("Two ways to use it:"),
-              tags$ol(
-                tags$li(
-                  HTML(
-                    "Curated dataset — all published experiments testing clinically ",
-                    "effective anti-migraine drugs in the EMTVN rat model, collected ",
-                    "via systematic review (",
-                    "<a href='https://www.crd.york.ac.uk/PROSPERO/view/CRD42021276448' target='_blank'>protocol</a>). ",
-                    "Use this only to plan new EMTVN experiments."
-                  )
+                div(
+                  h5("Selected inputs for calculation"),
+                  uiOutput("calc_summary")
                 ),
-                tags$li(
-                  "Upload your dataset — same workflow for any animal model if you ",
-                  "prepare data in the required format."
+                div(
+                  style = "border-left: 1px solid #ddd; padding-left: 15px;",
+                  h4(textOutput("n_out"))
                 )
-              )
-            ),
-            # 2) Prepare your own dataset
-            bslib::accordion_panel(
-              tags$h5("Prepare your own dataset"),
-              p(
-                "Use one row per experiment, where an experiment is a treatment ",
-                "vs its control on a single animal/neuronal cohort."
-              ),
-              strong("Required columns:"),
-              tags$ul(
-                tags$li("Study.ID — integer; unique study identifier."),
-                tags$li("Exp.ID — integer; unique experiment ID within each Study.ID."),
-                tags$li("Outcome — character; endpoint label for grouping."),
-                tags$li("MD — numeric; effect size (mean difference, same units for all rows)."),
-                tags$li("SE — numeric; standard error of MD."),
-                tags$li("Spooled — numeric; pooled SD used to derive SE.")
-              ),
-              strong("Optional:"),
-              tags$ul(
-                tags$li("Drug — character; treatment name."),
-                tags$li("Reference — character; citation or study short name.")
-              ),
-              p(
-                "Combine any sub-measures (e.g., different fibre types, multiple readouts) ",
-                "into a single MD/SE per experiment before entry."
-              )
-            ),
-            
-            # 3) Effect size & Variance calculation
-            bslib::accordion_panel(
-              tags$h5("Effect size & variance calculation"),
-              p("Formulas follow Vesterinen et al., 2014:"),
-              tags$pre(
-                HTML("MD = M<sub>t</sub> − M<sub>c</sub>"),
-                HTML("\nS<sub>pooled</sub> = sqrt(((N<sub>c</sub>−1)·SD<sub>c</sub><sup>2</sup> + (N<sub>t</sub>−1)·SD<sub>t</sub><sup>2</sup>) / (N<sub>c</sub>+N<sub>t</sub>−2))"),
-                HTML("\nSE = sqrt((N<sub>c</sub>+N<sub>t</sub>) / (N<sub>c</sub>·N<sub>t</sub>)) · S<sub>pooled</sub>")
-              ),
-              p(
-                "In the curated dataset we used % of baseline neuronal activity as the unit, ",
-                "so MD is the absolute difference in percentage points."
-              ),
-              p(
-                HTML(
-                  "Reference: Vesterinen et al., <em>PLOS Biology</em>, 2014 ",
-                  "(<a href='https://doi.org/10.1371/journal.pbio.1001779' target='_blank'>link</a>)."
-                )
-              )
-            ),
-            
-            # 4) Meta-analytic model
-            bslib::accordion_panel(
-              tags$h5("Meta-analytic model"),
-              p(
-                "We fit a three-level random-effects meta-analysis with robust variance ",
-                "estimation for CIs:"
-              ),
-              tags$pre(
-                "metafor::rma.mv(\n",
-                "  yi     = dt$MD,\n",
-                "  V      = dt$SE^2,\n",
-                "  random = ~ 1 | Study.ID / Exp.ID,\n",
-                "  data   = dt\n",
-                ")"
-              ),
-              p(
-                "Random intercepts are included for studies and experiments within studies ",
-                "to account for dependence. Level-1 variance is the sampling error from SE."
-              ),
-              p(
-                HTML(
-                  "For details, see Viechtbauer (2010) ",
-                  "(<a href='https://doi.org/10.18637/jss.v036.i03' target='_blank'>link</a>)."
-                )
-              )
-            ),
-            
-            # 5) Sample size calculation
-            bslib::accordion_panel(
-              tags$h5("Sample size calculation"),
-              p(
-                "The app uses the pooled MD from the meta-analysis as your benchmark. ",
-                "You set a target effect as a fraction of that benchmark (100%, 80%, 50%). ",
-                "We then calculate the per-group sample size for your chosen power, ",
-                "given an assumed pooled SD."
-              ),
-              p(
-                "The pooled SD options — Low, Median, High — correspond to the 20th, 50th, ",
-                "and 80th percentiles of pooled SD values in the loaded dataset."
-              ),
-              p(
-                "For example, if the 80th percentile SD is 24.5%, it means 80% of experiments ",
-                "in the dataset had pooled SD ≤ 24.5%. Use this if you expect similar or ",
-                "worse variability in your planned experiment."
-              )
-            ),
-            bslib::accordion_panel(
-              tags$h5("Sources & data"),
-              p(
-                tags$a(href = "https://doi.org/10.1111/ejn.16030", target = "_blank",
-                       "Paper: Dolgorukova et al., Eur J Neurosci (doi:10.1111/ejn.16030)"),
-                br(),
-                tags$a(href = "https://osf.io/vzjys/", target = "_blank",
-                       "OSF project with raw/processed data and scripts")
-              )
             )
           )
         ),
@@ -349,8 +258,150 @@ ui <- page_navbar(
             withSpinner(DT::dataTableOutput("raw_table"), type = 4)
           )
         )
-      )
+      ),
+      bslib::accordion(
+        bslib::accordion_panel(
+          "Quick start",
+          p(
+            "This app turns a set of experiment-level effect sizes into",
+            " a pooled benchmark (via meta-analysis) and then uses it",
+            " to compute simple size (animals per group) for a new study."
+          ),
+          p(
+            "The goal is to plan for detecting a biologically meaningful effect — one ",
+            "that is large enough to be relevant and, ideally, predictive of ",
+            "translating into an effective treatment."
+          ),
+          p(
+            "We set that target effect using human-proven drugs as a benchmark, ",
+            "so you compare your planned study’s detectable effect to something with ",
+            "known clinical relevance."
+          ),
+          strong("Two ways to use it:"),
+          tags$ol(
+            tags$li(
+              HTML(
+                "Curated dataset — all published experiments testing clinically ",
+                "effective anti-migraine drugs in the EMTVN rat model, collected ",
+                "via systematic review (",
+                "<a href='https://www.crd.york.ac.uk/PROSPERO/view/CRD42021276448' target='_blank'>protocol</a>). ",
+                "Use this only to plan new EMTVN experiments."
+              )
+            ),
+            tags$li(
+              "Upload your dataset — same workflow for any animal model if you ",
+              "prepare data in the required format."
+            )
+          )
+        ),
+        # 2) Prepare your own dataset
+        bslib::accordion_panel(
+          "Prepare your own dataset",
+          p(
+            "Use one row per experiment, where an experiment is a treatment ",
+            "vs its control on a single animal/neuronal cohort."
+          ),
+          strong("Required columns:"),
+          tags$ul(
+            tags$li("Study.ID — integer; unique study identifier."),
+            tags$li("Exp.ID — integer; unique experiment ID within each Study.ID."),
+            tags$li("Outcome — character; endpoint label for grouping."),
+            tags$li("MD — numeric; effect size (mean difference, same units for all rows)."),
+            tags$li("SE — numeric; standard error of MD."),
+            tags$li("Spooled — numeric; pooled SD used to derive SE.")
+          ),
+          strong("Optional:"),
+          tags$ul(
+            tags$li("Drug — character; treatment name."),
+            tags$li("Reference — character; citation or study short name.")
+          ),
+          p(
+            "Combine any sub-measures (e.g., different fibre types, multiple readouts) ",
+            "into a single MD/SE per experiment before entry."
+          )
+        ),
+        
+        # 3) Effect size & Variance calculation
+        bslib::accordion_panel(
+          "Effect size & variance calculation",
+          p("Formulas follow Vesterinen et al., 2014:"),
+          tags$pre(
+            HTML("MD = M<sub>t</sub> − M<sub>c</sub>"),
+            HTML("\nS<sub>pooled</sub> = sqrt(((N<sub>c</sub>−1)·SD<sub>c</sub><sup>2</sup> + (N<sub>t</sub>−1)·SD<sub>t</sub><sup>2</sup>) / (N<sub>c</sub>+N<sub>t</sub>−2))"),
+            HTML("\nSE = sqrt((N<sub>c</sub>+N<sub>t</sub>) / (N<sub>c</sub>·N<sub>t</sub>)) · S<sub>pooled</sub>")
+          ),
+          p(
+            "In the curated dataset we used % of baseline neuronal activity as the unit, ",
+            "so MD is the absolute difference in percentage points."
+          ),
+          p(
+            HTML(
+              "Reference: Vesterinen et al., <em>PLOS Biology</em>, 2014 ",
+              "(<a href='https://doi.org/10.1371/journal.pbio.1001779' target='_blank'>link</a>)."
+            )
+          )
+        ),
+        
+        # 4) Meta-analytic model
+        bslib::accordion_panel(
+          "Meta-analytic model",
+          p(
+            "We fit a three-level random-effects meta-analysis with robust variance ",
+            "estimation for CIs:"
+          ),
+          tags$pre(
+            "metafor::rma.mv(\n",
+            "  yi     = dt$MD,\n",
+            "  V      = dt$SE^2,\n",
+            "  random = ~ 1 | Study.ID / Exp.ID,\n",
+            "  data   = dt\n",
+            ")"
+          ),
+          p(
+            "Random intercepts are included for studies and experiments within studies ",
+            "to account for dependence. Level-1 variance is the sampling error from SE."
+          ),
+          p(
+            HTML(
+              "For details, see Viechtbauer (2010) ",
+              "(<a href='https://doi.org/10.18637/jss.v036.i03' target='_blank'>link</a>)."
+            )
+          )
+        ),
+        
+        # 5) Sample size calculation
+        bslib::accordion_panel(
+          "Sample size calculation",
+          p(
+            "The app uses the pooled MD from the meta-analysis as your benchmark. ",
+            "You set a target effect as a fraction of that benchmark (100%, 80%, 50%). ",
+            "We then calculate the per-group sample size for your chosen power, ",
+            "given an assumed pooled SD."
+          ),
+          p(
+            "The pooled SD options — Low, Median, High — correspond to the 20th, 50th, ",
+            "and 80th percentiles of pooled SD values in the loaded dataset."
+          ),
+          p(
+            "For example, if the 80th percentile SD is 24.5%, it means 80% of experiments ",
+            "in the dataset had pooled SD ≤ 24.5%. Use this if you expect similar or ",
+            "worse variability in your planned experiment."
+          )
+        ),
+        bslib::accordion_panel(
+          "Sources & data",
+          p(
+            tags$a(href = "https://doi.org/10.1111/ejn.16030", target = "_blank",
+                   "Paper: Dolgorukova et al., Eur J Neurosci (doi:10.1111/ejn.16030)"),
+            br(),
+            tags$a(href = "https://osf.io/vzjys/", target = "_blank",
+                   "OSF project with raw/processed data and scripts")
+          )
+        )
+      ),
+      col_widths = c(12, 12)
     )
+    
   )
 )
 
@@ -466,11 +517,14 @@ server <- function(input, output, session) {
     dt <- raw_data()
     if (is.null(dt)) return(NULL)
     outs <- sort(unique(as.character(dt$Outcome)))
-    radioButtons(
-      inputId = "outcome",
-      label = tags$h5("Outcome"),
-      choices = outs,
-      selected = outs[1]
+    div(
+      class = "input-block",
+      radioButtons(
+        inputId = "outcome",
+        label = tags$h5("Outcome"),
+        choices = outs,
+        selected = outs[1]
+      )
     )
   })
   
@@ -490,14 +544,10 @@ server <- function(input, output, session) {
     )[input$sd_bucket]
     
     tags$div(
-      tags$p("Outcome:", paste0(" ", input$outcome)),
-      tags$p(
-        "Target effect (MD, %): ",
-        paste(round(md_used, 2), lvl_label)
-      ),
-      tags$p(
-        "Expected variability (SD, %): ",
-        paste(round(sd_used, 2), sd_label)
+      tags$ul(
+        tags$li("Outcome:", paste0(" ", input$outcome)),
+        tags$li("Target effect (MD, %): ", paste(round(md_used, 2), lvl_label)),
+        tags$li("Expected variability (SD, %): ", paste(round(sd_used, 2), sd_label))
       )
     )
   })
