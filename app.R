@@ -6,85 +6,31 @@ library(DT)
 library(bslib)
 library(shinycssloaders)
 source("utils.R")
-
-theme <- bs_theme(
-  version = 5,
-  bootswatch = "flatly",
-  primary = "#0B7285",
-  "nav-link-color" = "bs-primary-text-emphasis",
-  
-  base_font = font_google("Inter"),
-  code_font  = font_google("Fira Mono"),
-  heading_font = font_google("Inter")
-)
-
-theme <- bslib::bs_add_rules(
-  theme,
-  "/* Left panel input blocks: consistent spacing */
-  .input-block { margin-bottom: .75rem; display: flow-root; }
-  .input-block > h5 { margin: 0 0 .25rem 0; font-size: 1.25rem; }
-  
-  /* Ensure no special-casing for last block margins */
-  .input-block:last-child { margin-bottom: .75rem !important; }
-  
-  /* Match card-header style to accordion-button */
-  .card-header {
-    background-color: var(--bs-primary-bg-subtle);
-    color: var(--bs-primary-text-emphasis);
-  }
-  /* Compact navbar */
-  .navbar .navbar-brand {
-    margin: 0 !important;
-  }
-
-  .navbar .navbar-brand .name-title {
-  font-size: 2rem;
-  }
-  .navbar .navbar-brand .name-subtitle {
-  font-size: 1rem; font-weight: 400; color: var(--bs-gray-500);
-  }
-  "
-)
-
-# remove default extra borders on active accordion-button
-theme <- bs_add_rules(theme, "
-  .accordion-button {
-    border: none !important;
-    box-shadow: none !important;
-  }
-  .accordion-button:not(.collapsed) {
-    border: none !important;
-    box-shadow: none !important;
-  }
-  .accordion-button:focus {
-    border: none !important;
-    box-shadow: none !important;
-    outline: none !important;
-  }
-")
+source("css.R")
 
 ui <- page_navbar(
   theme = theme,
   title = tags$div(
     class = "app-name",
-    tags$div(class = "name-title",   "Preclinical Sample Size Planner"),
+    tags$div(class = "name-title", "Preclinical Sample Size Planner"),
     tags$div(
       class = "name-subtitle",
       "Goodbye guesswork, hello clinically-proven benchmarks"
     )
   ),
   fillable = TRUE,
-  layout_columns(
+  header = layout_columns(
     col_widths = c(3, 9),
     class = "cols-tight mt-3",
-    
+
     ## LEFT: Settings
     card(
+      class = "sidebar-card",
       card_header(
         "Settings",
         style = "padding-top:1rem; padding-bottom:.5rem;"
       ),
-      
+
       # Dataset choice
       div(
         class = "input-block",
@@ -98,7 +44,7 @@ ui <- page_navbar(
           selected = "paper"
         )
       ),
-      
+
       # Upload UI (only when uploading)
       conditionalPanel(
         condition = "input.data_source == 'custom' && output.data_ready != 1",
@@ -119,13 +65,13 @@ ui <- page_navbar(
                        class = "btn btn-primary")
         )
       ),
-      
+
       # Outcome + planning choices (after data ready or default)
       conditionalPanel(
         condition = "output.data_ready == 1 || input.data_source == 'paper'",
-        
+
         uiOutput("outcome_picker"),
-        
+
         # EFFECT target: discrete buckets
         div(
           class = "input-block",
@@ -166,7 +112,7 @@ ui <- page_navbar(
             inline = FALSE
           )
         ),
-        
+
         # POOLED SD: percentile buckets
         div(
           class = "input-block",
@@ -210,7 +156,7 @@ ui <- page_navbar(
             inline = FALSE
           )
         ),
-        
+
         # Power
         div(
           class = "input-block",
@@ -240,7 +186,7 @@ ui <- page_navbar(
         )
       )
     ),
-    
+
     ## RIGHT: Tabs
     layout_columns(
       navset_card_tab(
@@ -265,7 +211,7 @@ ui <- page_navbar(
             )
           )
         ),
-        
+
         nav_panel(
           "Data",
           conditionalPanel(
@@ -416,9 +362,9 @@ ui <- page_navbar(
       ),
       col_widths = c(12, 12)
     )
-    
   ),
   footer = div(
+    class = "app-footer",
     style = "text-align: center; padding: 1rem; 
            font-size: 0.85rem; color: #6c757d",
     "Version 1.0 | © 2025 Antonina Dolgorukova"
