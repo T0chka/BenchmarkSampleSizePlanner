@@ -12,6 +12,14 @@ theme <- bs_theme(
   heading_font = font_google("Inter")
 )
 
+# H5
+theme <- bslib::bs_add_rules(theme, "
+  h5, .h5 {
+    font-weight: 500;
+    font-size: 1rem !important;
+  }
+")
+
 # Left panel input blocks spacing
 theme <- bslib::bs_add_rules(theme, "
   .input-block { margin-bottom: .75rem; display: flow-root; }
@@ -105,24 +113,41 @@ theme <- bslib::bs_add_rules(theme, "
   "
 )
 
-# Results header row layout and right-side box divider
+# Gap spacing
 theme <- bslib::bs_add_rules(theme, "
-  .results-header-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  .results-right-box {
-    border-left: 1px solid var(--bs-border-color);
-    padding-left: 15px;
+  .bslib-gap-spacing {
+    gap: 0;
   }
   "
 )
 
-# Gap spacing
+# value-box
 theme <- bslib::bs_add_rules(theme, "
-  .bslib-gap-spacing {
-    gap: none;
+  .value-box {
+    border: 0 !important;
+    border-radius: 14px;
+    background: rgba(11,114,133,.06);           /* #0B7285 с малой насыщенностью */
+    box-shadow: inset 0 0 0 1px rgba(11,114,133,.12);
+  }
+  .value-box .value-box-title {
+    color: var(--bs-primary);
+    font-weight: 600;
+  }
+  .value-box .value-box-value {
+    font-size: 2.8rem;
+    font-weight: 800;
+  }
+  .value-box .value-box-showcase {
+    background: transparent;
+    align-self: center;
+  }
+  .value-box .value-box-showcase .bi {
+    font-size: 1.9rem;
+    color: var(--bs-primary);
+    background: #fff;
+    border-radius: 50%;
+    padding: 8px;
+    box-shadow: 0 2px 6px rgba(0,0,0,.08);
   }
   "
 )

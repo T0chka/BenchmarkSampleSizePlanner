@@ -495,7 +495,7 @@ server <- function(input, output, session) {
     val <- if (is.na(n)) "Insufficient inputs" else as.character(n)
     bslib::value_box(
       title = "Animals per group",
-      value = val,
+      value = tags$span(val),
       showcase = bsicons::bs_icon("calculator")
     )
   })
