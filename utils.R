@@ -1,11 +1,33 @@
-utils::globalVariables(
-  c(
-    ".",
-    "Study.ID", "Exp.ID", "Outcome", "MD", "SE",
-    "Spooled", "Drug", "Reference"
+#' Read and filter raw data
+prepare_data <- function(path, sheet) {
+  dt <- read_xlsx(path, sheet = sheet)
+  dt <- as.data.table(dt)
+  
+  chk <- .check_input_data(dt, sheet)
+  
+  for (id_col in chk$ids_to_convert) {
+    dt[[id_col]] <- as.numeric(dt[[id_col]])
+  }
+  for (char_col in chk$char_to_factor) {
+    dt[[char_col]] <- as.factor(dt[[char_col]])
+  }
+  show_cols <- intersect(
+    c("Study.ID", "Exp.ID", "Reference",
+      "Drug", "Outcome", "MD", "SE", "Spooled"),
+    names(dt)
   )
-)
+  
+  dt[, ..show_cols]
+}
 
+# utils::globalVariables(
+#   c(
+#     ".",
+#     "Study.ID", "Exp.ID", "Outcome", "MD", "SE",
+#     "Spooled", "Drug", "Reference"
+#   )
+# )
+# 
 .check_input_data <- function(dt, sheet) {
   # emptiness
   if (nrow(dt) == 0) stop(sprintf("No data in '%s' sheet!", sheet))
@@ -65,45 +87,6 @@ utils::globalVariables(
   list(ids_to_convert = ids_to_convert, char_to_factor = char_to_factor)
 }
 
-#' Read and filter raw data
-prepare_data <- function(path, sheet) {
-  dt <- read_xlsx(path, sheet = sheet)
-  dt <- as.data.table(dt)
-  
-  chk <- .check_input_data(dt, sheet)
-  
-  for (id_col in chk$ids_to_convert) {
-    dt[[id_col]] <- as.numeric(dt[[id_col]])
-  }
-  for (char_col in chk$char_to_factor) {
-    dt[[char_col]] <- as.factor(dt[[char_col]])
-  }
-  show_cols <- intersect(
-    c("Study.ID", "Exp.ID", "Reference",
-      "Drug", "Outcome", "MD", "SE", "Spooled"),
-    names(dt)
-  )
-  
-  dt[, ..show_cols]
-}
-
-#' Fit three-level meta-analytic model with optional robust variance estimation
-fit_mv <- function(dt, robust_ve = FALSE) {
-  res <- rma.mv(
-    yi     = dt$MD,
-    V      = dt$SE^2,
-    random = ~ 1 | Study.ID / Exp.ID,
-    data   = dt,
-    slab   = paste(Drug, Reference, sep = ", ")
-  )
-  
-  if (robust_ve) {
-    return(robust(res, cluster = dt$Study.ID))
-  } else {
-    return(res)
-  }
-}
-
 #' Remove influential outliers - experiments, which meet the 2 conditions:
 #' influential case: if Cook’s Distance > 4 / total number of experiments
 #' outlier: if standardized (deleted) residuals > ± 1.96
@@ -119,6 +102,24 @@ remove_influential_outliers <- function(dt) {
   dt_filt <- dt[!influential_outliers]
   
   dt_filt
+}
+
+#' Fit three-level meta-analytic model with optional robust variance estimation
+fit_mv <- function(dt, robust_ve = FALSE) {
+  use_full_labels <- all(c("Drug", "Reference") %in% names(dt))
+  res <- rma.mv(
+    yi     = MD,
+    V      = SE^2,
+    random = ~ 1 | Study.ID / Exp.ID,
+    data   = dt,
+    slab   = if (use_full_labels) paste(Drug, Reference, sep = ", ") else Exp.ID
+  )
+  
+  if (robust_ve) {
+    return(robust(res, cluster = dt$Study.ID))
+  } else {
+    return(res)
+  }
 }
 
 #' Calculate sample size using a 5% non-parametric correction,

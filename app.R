@@ -216,133 +216,207 @@ ui <- page_navbar(
             )
           )
         ),
+        
         bslib::accordion(
           bslib::accordion_panel(
             "Quick start",
             p(
-              "This app turns a set of experiment-level effect sizes into",
-              " a pooled benchmark (via meta-analysis) and then uses it",
-              " to compute simple size (animals per group) for a new study."
+              "This app takes a set of experiment-level effect sizes, performs a ",
+              "meta-analysis to produce a pooled benchmark, and then uses that ",
+              "benchmark to calculate how many animals per group you’ll need",
+              "for a new study."
             ),
             p(
-              "The goal is to plan for detecting a biologically meaningful effect — one ",
-              "that is large enough to be relevant and, ideally, predictive of ",
-              "translating into an effective treatment."
+              "The aim is to plan studies that can detect a biologically meaningful ",
+              "effect – large enough to matter and, ideally, predictive of successful ",
+              "translation into an effective treatment."
             ),
             p(
-              "We set that target effect using human-proven drugs as a benchmark, ",
-              "so you compare your planned study’s detectable effect to something with ",
-              "known clinical relevance."
+              "We define this target effect using data from human-proven drugs.",
+              " This ensures that the effect your study is designed to detect",
+              " is tied to known clinical relevance."
             ),
-            p("Two ways to use it:"),
+            p("Two ways to get started:"),
             tags$ol(
               tags$li(
                 HTML(
-                  "Curated dataset — all published experiments testing clinically ",
-                  "effective anti-migraine drugs in the EMTVN rat model, collected ",
-                  "via systematic review (",
-                  "<a href='https://www.crd.york.ac.uk/PROSPERO/view/CRD42021276448' target='_blank'>protocol</a>). ",
-                  "Use this only to plan new EMTVN experiments."
+                  "Use our curated dataset – a prepared set of all published (as of Dec 2021) ",
+                  "experiments testing clinically effective anti-migraine drugs in the ",
+                  "rat electrophysiological model of trigeminovascular nociception ",
+                  "(EMTVN), collected via systematic review ",
+                  "(<a href='https://www.crd.york.ac.uk/PROSPERO/view/CRD42021276448' ",
+                  "target='_blank'>protocol</a>). Use this only for planning new experiments ",
+                  "with this particular model."
                 )
               ),
               tags$li(
-                "Upload your dataset — same workflow for any animal model if you ",
-                "prepare data in the required format."
+                "Upload your own dataset – apply the same approach to any animal model, ",
+                "by preparing your data in the required format (see below)."
               )
             )
           ),
-          # 2) Prepare your own dataset
+          
           bslib::accordion_panel(
             "Prepare your own dataset",
             p(
-              "Use one row per experiment, where an experiment is a treatment ",
-              "vs its control on a single animal/neuronal cohort."
+              "Use one row per experiment. An experiment is a single comparison of a ",
+              "treatment group and its matched control group within the same study."
             ),
-            strong("Required columns:"),
+            p("Required columns:"),
             tags$ul(
-              tags$li("Study.ID — integer; unique study identifier."),
-              tags$li("Exp.ID — integer; unique experiment ID within each Study.ID."),
-              tags$li("Outcome — character; endpoint label for grouping."),
-              tags$li("MD — numeric; effect size (mean difference, same units for all rows)."),
-              tags$li("SE — numeric; standard error of MD."),
-              tags$li("Spooled — numeric; pooled SD used to derive SE.")
+              tags$li("Study.ID – numeric; unique study identifier."),
+              tags$li("Exp.ID – numeric; unique identifier for each experiment within a study."),
+              tags$li("Outcome – character; endpoint label for grouping."),
+              tags$li("MD – numeric; effect size (mean difference, same units for all rows)."),
+              tags$li("SE – numeric; standard error of MD."),
+              tags$li("Spooled – numeric; pooled SD used to derive SE.")
             ),
-            strong("Optional:"),
+            p("Optional columns:"),
             tags$ul(
-              tags$li("Drug — character; treatment name."),
-              tags$li("Reference — character; citation or study short name.")
+              tags$li("Drug – character; treatment name."),
+              tags$li("Reference – character; citation or short study name.")
             ),
             p(
-              "Combine any sub-measures (e.g., different fibre types, multiple readouts) ",
-              "into a single MD/SE per experiment before entry."
+              "For an example of how such a dataset can be collected via a systematic ",
+              "search, see our ",
+              tags$a(
+                href = "https://doi.org/10.1111/ejn.16030",
+                target = '_blank',
+                "published study"
+              ), "."
             )
           ),
           
-          # 3) Effect size & Variance calculation
-          bslib::accordion_panel(
-            "Effect size & variance calculation",
-            p("Formulas follow Vesterinen et al., 2014:"),
-            tags$pre(
-              HTML("MD = M<sub>t</sub> − M<sub>c</sub>"),
-              HTML("\nS<sub>pooled</sub> = sqrt(((N<sub>c</sub>−1)·SD<sub>c</sub><sup>2</sup> + (N<sub>t</sub>−1)·SD<sub>t</sub><sup>2</sup>) / (N<sub>c</sub>+N<sub>t</sub>−2))"),
-              HTML("\nSE = sqrt((N<sub>c</sub>+N<sub>t</sub>) / (N<sub>c</sub>·N<sub>t</sub>)) · S<sub>pooled</sub>")
-            ),
-            p(
-              "In the curated dataset we used % of baseline neuronal activity as the unit, ",
-              "so MD is the absolute difference in percentage points."
-            ),
-            p(
-              HTML(
-                "Reference: Vesterinen et al., <em>PLOS Biology</em>, 2014 ",
-                "(<a href='https://doi.org/10.1371/journal.pbio.1001779' target='_blank'>link</a>)."
-              )
-            )
-          ),
-          
-          # 4) Meta-analytic model
           bslib::accordion_panel(
             "Meta-analytic model",
-            p(
-              "We fit a three-level random-effects meta-analysis with robust variance ",
-              "estimation for CIs:"
+            withMathJax(
+              p(HTML(
+                "Per-experiment effect sizes are observed mean differences ",
+                "(\\(MD_{ij} = M_t - M_c\\)) with known standard errors ",
+                "(\\(SE_{ij}\\)). To pool these while accounting for clustering, ",
+                "the app fits a three-level random-effects model ",
+                "(<a href='https://doi.org/10.18637/jss.v036.i03' target='_blank'>Viechtbauer, 2010</a>). ",
+                "Let \\(\\theta_{ij}\\) denote the true effect ",
+                "for experiment \\(i\\) in study \\(j\\):"
+              ))
             ),
-            tags$pre(
-              "metafor::rma.mv(\n",
-              "  yi     = dt$MD,\n",
-              "  V      = dt$SE^2,\n",
-              "  random = ~ 1 | Study.ID / Exp.ID,\n",
-              "  data   = dt\n",
-              ")"
+            
+            div(class = "row equal-row",
+                # LEFT: explanation
+                div(class = "col-sm-7",
+                    div(class = "card-box",
+                        withMathJax(
+                          div(style = "font-size:85%;",
+                              p(
+                                "$$\\theta_{ij} = \\mu + u_{study,j} + u_{exp,ij},\\qquad ",
+                                "MD_{ij} \\mid \\theta_{ij} \\sim ",
+                                "\\mathcal{N}(\\theta_{ij},\\, v_{ij}),\\quad ",
+                                "v_{ij} = SE_{ij}^{2}$$"
+                              ),
+                              tags$ul(
+                                tags$li(HTML(
+                                  "\\(\\mu\\) is the average true effect; its estimate, ",
+                                  "\\(\\hat{\\mu}\\), is the pooled benchmark used for sample-size planning."
+                                )),
+                                tags$li(HTML(
+                                  "between-study heterogeneity: ",
+                                  "\\(u_{study,j} \\sim \\mathcal{N}(0,\\, \\tau^2_{study})\\)."
+                                )),
+                                tags$li(HTML(
+                                  "within-study (between-experiment) heterogeneity: ",
+                                  "\\(u_{exp,ij} \\sim \\mathcal{N}(0,\\, \\tau^2_{exp})\\)."
+                                )),
+                                tags$li(HTML(
+                                  "sampling variance: \\(v_{ij} = SE_{ij}^{2}\\) (from the input)."
+                                )),
+                                tags$li(HTML(
+                                  "estimation uses REML and the marginal variance of \\(MD_{ij}\\) is ",
+                                  "\\(SE_{ij}^{2} + \\tau^2_{exp} + \\tau^2_{study}\\)."
+                                ))
+                              )
+                          )
+                        )
+                    )
+                ),
+                
+                # RIGHT: wider code box
+                div(class = "col-sm-5",
+                    div(class = "card-box",
+                        {
+                          code_r <- paste(
+                            "res <- metafor::rma.mv(",
+                            "  yi     = MD,",
+                            "  V      = SE^2,",
+                            "  random = ~ 1 | Study.ID / Exp.ID,",
+                            "  method = 'REML',",
+                            "  data   = dt",
+                            ")",
+                            "",
+                            "res_rob <- metafor::robust(res, cluster = dt$Study.ID)",
+                            sep = "\n"
+                          )
+                          tags$pre(class = "mono", style = "font-size:72%;", code_r)
+                        }
+                    )
+                )
             ),
-            p(
-              "Random intercepts are included for studies and experiments within studies ",
-              "to account for dependence. Level-1 variance is the sampling error from SE."
-            ),
-            p(
-              HTML(
-                "For details, see Viechtbauer (2010) ",
-                "(<a href='https://doi.org/10.18637/jss.v036.i03' target='_blank'>link</a>)."
-              )
-            )
+            
+            p(HTML(
+              "We do not require all experiments to be identical – the model explicitly ",
+              "allows them to differ with two sources of heterogeneity (between studies ",
+              "and between experiments within studies). Study-level cluster-robust ",
+              "standard errors are computed with the small-sample adjustment ",
+              " in <code>metafor::robust()</code> ",
+              "(<a href='https://doi.org/10.1002/jrsm.5' target='_blank'>Hedges et&nbsp;al., 2010</a>). ",
+              "Therefore, if your dataset includes multiple experiments per study and/or ",
+              "shared control groups, this dependence is handled by the model."
+            ))
           ),
           
-          # 5) Sample size calculation
           bslib::accordion_panel(
             "Sample size calculation",
-            p(
-              "The app uses the pooled MD from the meta-analysis as your benchmark. ",
-              "You set a target effect as a fraction of that benchmark (100%, 80%, 50%). ",
-              "We then calculate the per-group sample size for your chosen power, ",
-              "given an assumed pooled SD."
+            withMathJax(
+              p(
+                "The app uses the pooled estimate \\(\\hat{\\mu}\\) from the meta-analysis ",
+                "as the benchmark effect size. The per-group sample size is ",
+                "then calculated for your chosen power using the Wilcoxon–Mann–Whitney ",
+                "test formula (two-sided \\(\\alpha = 0.05\\), allocation ratio 1:1) with ",
+                "a 5% non-parametric correction to match G*Power results."
+              )
             ),
             p(
-              "The pooled SD options — Low, Median, High — correspond to the 20th, 50th, ",
-              "and 80th percentiles of pooled SD values in the loaded dataset."
+              "In our work and previous preclinical meta-analyses, pooled standard deviations (SDs) ",
+              "varied widely across experiments. It is therefore likely that your dataset ",
+              "will also show substantial variability. For this reason, the app allows ",
+              "you to explore scenarios with different pooled SD values – the 20th, 50th, ",
+              "and 80th percentiles of the distribution in the loaded dataset (labelled ",
+              "Low, Median, and High variability).",
+              "Choosing a higher percentile yields a more conservative (larger) sample size."
+            ),
+            div(
+              style = paste(
+                "border-left: 3px solid #ccc;",
+                "padding-left: 0.6em;",
+                "color: #555;",
+                "font-size: 85%;",
+                "margin-bottom: 0.8em;"
+              ),
+              "Example: If the 80th percentile pooled SD (High variability) is 24.5%, ",
+              "then 80% of experiments in the dataset had pooled SD ≤ 24.5%."
             ),
             p(
-              "For example, if the 80th percentile SD is 24.5%, it means 80% of experiments ",
-              "in the dataset had pooled SD ≤ 24.5%. Use this if you expect similar or ",
-              "worse variability in your planned experiment."
+              "When datasets consist only of published experiments, pooled effects are ",
+              "often overestimated due to publication bias in preclinical literature ",
+              "(e.g., ",
+              tags$a(href = "https://doi.org/10.1371/journal.pbio.1000344", target = "_blank",
+                     "Sena et al., 2010"),
+              "; low power also inflates observed effects, see ",
+              tags$a(href = "https://doi.org/10.1038/nrn3475", target = "_blank",
+                     "Button et al., 2013"),
+              "). To guard against optimism while retaining clinical relevance, the app ",
+              "lets you plan for 80% or 50% of \\(\\hat{\\mu}\\). This can reduce the ",
+              "required number of animals in line with the 3Rs principle ",
+              "(Reduction) yet still target a meaningful, translational effect."
             )
           ),
           bslib::accordion_panel(
@@ -523,8 +597,8 @@ server <- function(input, output, session) {
           paste0(" (", nrow(dt_filt) - nrow(dt), " outliers excluded)")
         ),
         tags$li("Outcome:", paste0(" ", input$outcome)),
-        tags$li("Target effect (MD, %): ", paste(round(md_used, 2), lvl_label)),
-        tags$li("Expected variability (SD, %): ", paste(round(sd_used, 2), sd_label))
+        tags$li("Target effect (MD): ", paste(round(md_used, 2), lvl_label)),
+        tags$li("Expected variability (SD): ", paste(round(sd_used, 2), sd_label))
       )
     )
   })
