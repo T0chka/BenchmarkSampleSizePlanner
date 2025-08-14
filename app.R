@@ -13,7 +13,10 @@ ui <- page_navbar(
   theme = theme,
   title = tags$div(
     class = "app-name",
-    tags$div(class = "name-title", "Preclinical Sample Size Planner"),
+    tags$div(
+      class = "name-title",
+      "Benchmark-Based Sample Size Planner for Animal Studies"
+    ),
     tags$div(
       class = "name-subtitle",
       "Goodbye guesswork, hello clinically-proven benchmarks"
