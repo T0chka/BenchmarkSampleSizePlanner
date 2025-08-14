@@ -90,8 +90,8 @@ prepare_data <- function(path, sheet) {
 remove_influential_outliers <- function(dt) {
   res <- fit_mv(dt)
   
-  rst  <- metafor::rstudent(res)$z
-  cd   <- metafor::cooks.distance(res)
+  rst  <- stats::rstudent(res)$z
+  cd   <- stats::cooks.distance(res)
   k    <- res$k
   cutz <- stats::qnorm(.975)
   
