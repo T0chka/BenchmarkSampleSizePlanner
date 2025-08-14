@@ -1,9 +1,10 @@
 ## Benchmark-Based Sample Size Planner (Shiny)
 
-A Shiny application to plan per-group animal sample sizes using benchmarks
-from a meta-analysis of experiment-level effects. The app pools mean
-differences with a three-level random-effects model and study-cluster robust
-standard errors, then calculates sample sizes for the Wilcoxon–Mann–Whitney
+A Shiny application, which takes a set of experiment-level effect sizes, performs a meta-analysis to produce a pooled benchmark, and then uses that benchmark to calculate how many animals per group you’ll need for a new study.
+
+The aim is to plan studies that can detect a biologically meaningful effect – large enough to matter and, ideally, predictive of successful translation into an effective treatment.
+
+The app remove influential outliers, pools mean differences with a three-level random-effects model and study-cluster robust standard errors ([metafor package](https://www.metafor-project.org/doku.php/metafor)), then calculates sample sizes for the Wilcoxon–Mann–Whitney
 (two-sided alpha = 0.05) with a 5% correction aligned to G*Power.
 
 ### Key features
