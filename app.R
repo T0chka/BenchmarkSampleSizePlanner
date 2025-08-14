@@ -441,11 +441,23 @@ ui <- page_navbar(
           bslib::accordion_panel(
             "Sources & data",
             p(
-              tags$a(href = "https://doi.org/10.1111/ejn.16030", target = "_blank",
-                     "Paper: Dolgorukova et al., Eur J Neurosci (doi:10.1111/ejn.16030)"),
+              "Paper: ",
+              tags$a(
+                href = "https://doi.org/10.1111/ejn.16030", target = "_blank",
+                "Dolgorukova et al., 2023, Eur J Neurosci"
+              ),
               br(),
-              tags$a(href = "https://osf.io/vzjys/", target = "_blank",
-                     "OSF project with raw/processed data and scripts")
+              "Raw/processed data and scripts for paper: ",
+              tags$a(
+                href = "https://osf.io/vzjys/", target = "_blank",
+                "OSF project"
+              ),
+              br(),
+              "GitHub repo: ",
+              tags$a(
+                href = "https://github.com/T0chka/BenchmarkSampleSizePlanner.git", target = "_blank",
+                "BenchmarkSampleSizePlanner"
+              )
             )
           )
         ),
