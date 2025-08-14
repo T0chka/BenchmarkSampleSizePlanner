@@ -1,4 +1,4 @@
-#' Read and filter raw data
+#' Read, check and filter raw data
 prepare_data <- function(path, sheet) {
   dt <- read_xlsx(path, sheet = sheet)
   dt <- as.data.table(dt)
@@ -20,15 +20,11 @@ prepare_data <- function(path, sheet) {
   dt[, ..show_cols]
 }
 
-# utils::globalVariables(
-#   c(
-#     ".",
-#     "Study.ID", "Exp.ID", "Outcome", "MD", "SE",
-#     "Spooled", "Drug", "Reference"
-#   )
-# )
-# 
-.check_input_data <- function(dt, sheet) {
+#' Validate and normalize input data
+#' Checks emptiness, required columns, and column types. Identifies
+#' ID columns safe to convert to numeric and character columns to cast
+#' to factors.
+ .check_input_data <- function(dt, sheet) {
   # emptiness
   if (nrow(dt) == 0) stop(sprintf("No data in '%s' sheet!", sheet))
   
@@ -87,16 +83,17 @@ prepare_data <- function(path, sheet) {
   list(ids_to_convert = ids_to_convert, char_to_factor = char_to_factor)
 }
 
-#' Remove influential outliers - experiments, which meet the 2 conditions:
-#' influential case: if Cook’s Distance > 4 / total number of experiments
-#' outlier: if standardized (deleted) residuals > ± 1.96
+#' Remove influential outliers
+#' Drops rows flagged as influential outliers using Cook's distance
+#' (> 4 / total number of experiments) and standardized residuals (> ± 1.96)
+#'  from a three-level model.
 remove_influential_outliers <- function(dt) {
   res <- fit_mv(dt)
   
-  rst  <- rstudent(res)$z
-  cd   <- cooks.distance(res)
+  rst  <- metafor::rstudent(res)$z
+  cd   <- metafor::cooks.distance(res)
   k    <- res$k
-  cutz <- qnorm(.975)
+  cutz <- stats::qnorm(.975)
   
   influential_outliers <- which(abs(rst) >= cutz & cd > 4 / k)
   dt_filt <- dt[!influential_outliers]
@@ -104,10 +101,11 @@ remove_influential_outliers <- function(dt) {
   dt_filt
 }
 
-#' Fit three-level meta-analytic model with optional robust variance estimation
+#' Fit three-level meta-analytic model
+#' Builds a random-effects model with optional robust variance estimation.
 fit_mv <- function(dt, robust_ve = FALSE) {
   use_full_labels <- all(c("Drug", "Reference") %in% names(dt))
-  res <- rma.mv(
+  res <- metafor::rma.mv(
     yi     = MD,
     V      = SE^2,
     random = ~ 1 | Study.ID / Exp.ID,
@@ -116,18 +114,18 @@ fit_mv <- function(dt, robust_ve = FALSE) {
   )
   
   if (robust_ve) {
-    return(robust(res, cluster = dt$Study.ID))
+    return(metafor::robust(res, cluster = dt$Study.ID))
   } else {
     return(res)
   }
 }
 
-#' Calculate sample size using a 5% non-parametric correction,
-#' which gives the same n as G*Power for the Wilcoxon-Mann-Whitney test
-#' at two-sided alfa = 0.05, allocation ratio 1:1.
+#' Calculate sample size with 5% non-parametric correction
+#' Matches G*Power for Wilcoxon-Mann-Whitney test
+#' at alpha = 0.05, two-sided, allocation 1:1.
 ss_calc <- function(md, sd, power) {
   if (is.na(sd) || sd <= 0 || is.na(md) || md == 0) return(NA)
-  n <- power.t.test(
+  n <- stats::power.t.test(
     power = power,
     delta = abs(md),
     sd = sd,
@@ -138,15 +136,14 @@ ss_calc <- function(md, sd, power) {
 }
 
 #' Quantiles vector helper for pooled SD
-#'
 #' Returns the 20th, 50th, and 80th percentiles of a numeric vector with
 #' names aligned to UI selections (p20, p50, p80). NAs are removed.
-#' @param x Numeric vector of pooled SD values
-#' @return Named numeric vector c(p20, p50, p80)
 q_vec <- function(x) {
   q <- stats::quantile(
-    x, probs = c(0.20, 0.50, 0.80), na.rm = TRUE, names = FALSE
+    x,
+    probs = c(0.20, 0.50, 0.80),
+    na.rm = TRUE,
+    names = FALSE
   )
-  names(q) <- c("p20", "p50", "p80")
-  q
+  stats::setNames(q, c("p20", "p50", "p80"))
 }
