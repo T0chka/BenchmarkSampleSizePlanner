@@ -286,7 +286,23 @@ ui <- page_navbar(
               ), "."
             )
           ),
-          
+          bslib::accordion_panel(
+            "Data pre-processing",
+            p(
+              "Before running the meta-analysis, the app automatically screens the dataset ",
+              "for potential outliers and influential cases. This helps ensure that the pooled ",
+              "benchmark is not distorted by a few atypical experiments."
+            ),
+            p(
+              HTML(
+                "Potential outliers are flagged via standardized deleted residuals ",
+                "(\\(|\\text{residual}| > 1.96\\)) and influential cases via Cook’s distances (\\(4 / n\\), ",
+                "where \\(n\\) is the number of data points; ",
+                "<a href='https://doi.org/10.1201/9781315119403' target='_blank'>",
+                "Schmid et&nbsp;al., 2020</a>). Influential outliers are removed."
+              )
+            )
+          ),
           bslib::accordion_panel(
             "Meta-analytic model",
             withMathJax(
