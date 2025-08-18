@@ -339,65 +339,20 @@ ui <- page_navbar(
             )
           ),
           
-          # Effect size & variance calculation ---------------------------------
-          
-          bslib::accordion_panel(
-            "Effect size & variance calculation",
-            withMathJax(
-              p(
-                "To derive the required per-experiment values, ",
-                "use the following definitions (following ",
-                tags$a(
-                  href = "https://www.sciencedirect.com/science/article/pii/S016502701300321X",
-                  target = "_blank",
-                  "Vesterinen et al., 2014"
-                ),
-                "):"
-              ),
-              p(
-                "Experiment-level effect size (\\(\\mathit{MD}\\)) is the difference ",
-                "between the mean in the treatment group (\\(M_t\\)) and the mean in the ",
-                "control group (\\(M_c\\)):"
-              ),
-              p("$$\\mathit{MD} = M_t - M_c$$"),
-              p(
-                "Pooled standard deviation (\\(S_{\\mathit{pooled}}\\)) combines the ",
-                "within-group standard deviations (\\(SD_c, SD_t\\)), weighted by ",
-                "degrees of freedom (\\(N_c - 1, N_t - 1\\)):"
-              ),
-              p(
-                "$$S_{\\mathit{pooled}} = ",
-                "\\sqrt{\\frac{(N_c - 1)\\,SD_c^{2} + (N_t - 1)\\,SD_t^{2}}{N - 2}}$$"
-              ),
-              p("Standard error of the mean difference:"),
-              p(
-                "$$\\mathit{SE} = \\sqrt{\\frac{N}{N_t \\times N_c}}\\,",
-                "S_{\\mathit{pooled}}$$"
-              ),
-              p("where \\(N = N_t + N_c\\).")
-            ),
-            withMathJax(
-              p(
-                "In the curated dataset, outcomes were measured as a percentage of ",
-                "baseline neuronal activity; thus \\(\\mathit{MD}\\) is the absolute ",
-                "difference in percentage points between treatment and control."
-              )
-            )
-          ),
-          
           # --- Meta-analytic model --------------------------------------------
           
           bslib::accordion_panel(
             "Meta-analytic model",
             withMathJax(
               p(HTML(
-                "Per-experiment effect sizes are observed mean differences ",
-                "(\\(MD_{ij} = M_t - M_c\\)) with known standard errors ",
-                "(\\(SE_{ij}\\)). To pool these while accounting for clustering, ",
-                "the app fits a three-level random-effects model ",
+                "Per-experiment effect sizes are the observed values ",
+                "(\\(\\mathit{y}_{ij}\\)) with known standard errors ",
+                "(\\(SE_{ij}\\)). Here, \\(\\mathit{y}_{ij}\\) corresponds to the value in ",
+                "<code>EffectSize</code> for experiment \\(i\\) in study \\(j\\). ",
+                "To pool these while accounting for clustering, the app fits a ",
+                "three-level random-effects model ",
                 "(<a href='https://doi.org/10.18637/jss.v036.i03' target='_blank'>Viechtbauer, 2010</a>). ",
-                "Let \\(\\theta_{ij}\\) denote the true effect ",
-                "for experiment \\(i\\) in study \\(j\\):"
+                "Let \\(\\theta_{ij}\\) denote the true effect for experiment \\(i\\) in study \\(j\\):"
               ))
             ),
             
@@ -408,30 +363,32 @@ ui <- page_navbar(
                         withMathJax(
                           div(style = "font-size:85%;",
                               p(
-                                "$$\\theta_{ij} = \\mu + u_{study,j} + u_{exp,ij},\\qquad ",
-                                "MD_{ij} \\mid \\theta_{ij} \\sim ",
+                                "$$\\theta_{ij} = \\mu + u_{\\text{study},j} + u_{\\text{exp},ij},\\qquad ",
+                                "\\mathit{y}_{ij} \\mid \\theta_{ij} \\sim ",
                                 "\\mathcal{N}(\\theta_{ij},\\, v_{ij}),\\quad ",
                                 "v_{ij} = SE_{ij}^{2}$$"
                               ),
                               tags$ul(
                                 tags$li(HTML(
-                                  "\\(\\mu\\) is the average true effect; its estimate, ",
-                                  "\\(\\hat{\\mu}\\), is the pooled benchmark used for sample-size planning."
+                                  "\\(\\mu\\) – average true effect; its estimate ",
+                                  "\\(\\hat{\\mu}\\) is the pooled benchmark used for ",
+                                  "sample-size planning"
                                 )),
                                 tags$li(HTML(
                                   "between-study heterogeneity: ",
-                                  "\\(u_{study,j} \\sim \\mathcal{N}(0,\\, \\tau^2_{study})\\)."
+                                  "\\(u_{\\text{study},j} \\sim \\mathcal{N}(0,\\, \\tau^2_{\\text{study}})\\)"
                                 )),
                                 tags$li(HTML(
                                   "within-study (between-experiment) heterogeneity: ",
-                                  "\\(u_{exp,ij} \\sim \\mathcal{N}(0,\\, \\tau^2_{exp})\\)."
+                                  "\\(u_{\\text{exp},ij} \\sim \\mathcal{N}(0,\\, \\tau^2_{\\text{exp}})\\)"
                                 )),
                                 tags$li(HTML(
-                                  "sampling variance: \\(v_{ij} = SE_{ij}^{2}\\) (from the input)."
+                                  "sampling variance: \\(v_{ij} = SE_{ij}^{2}\\) (from input)"
                                 )),
                                 tags$li(HTML(
-                                  "estimation uses REML, and the marginal variance of \\(MD_{ij}\\) is ",
-                                  "\\(SE_{ij}^{2} + \\tau^2_{exp} + \\tau^2_{study}\\)."
+                                  "estimation uses REML; the marginal variance of ",
+                                  "\\(\\mathit{y}_{ij}\\) is ",
+                                  "\\(SE_{ij}^{2} + \\tau^2_{\\text{exp}} + \\tau^2_{\\text{study}}\\)"
                                 ))
                               )
                           )
@@ -445,14 +402,14 @@ ui <- page_navbar(
                         {
                           code_r <- paste(
                             "res <- metafor::rma.mv(",
-                            "  yi     = MD,",
+                            "  yi     = EffectSize,",
                             "  V      = SE^2,",
-                            "  random = ~ 1 | Study.ID / Exp.ID,",
-                            "  method = 'REML',",
+                            "  random = ~ 1 | StudyID / ExpID,",
+                            "  method = \"REML\",",
                             "  data   = dt",
                             ")",
                             "",
-                            "res_rob <- metafor::robust(res, cluster = dt$Study.ID)",
+                            "res_rob <- metafor::robust(res, cluster = dt$StudyID)",
                             sep = "\n"
                           )
                           tags$pre(class = "mono", style = "font-size:72%;", code_r)
@@ -462,14 +419,14 @@ ui <- page_navbar(
             ),
             
             p(HTML(
-              "We do not require all experiments to be identical – the model explicitly ",
+              "We do not require experiments to be identical – the model explicitly ",
               "allows them to differ with two sources of heterogeneity (between studies ",
               "and between experiments within studies). Study-level cluster-robust ",
-              "standard errors are computed using <code>metafor::robust()</code> ",
-              "with a small-sample correction ",
+              "standard errors are computed using <code>metafor::robust()</code> with a ",
+              "small-sample correction ",
               "(<a href='https://doi.org/10.1002/jrsm.5' target='_blank'>Hedges et&nbsp;al., 2010</a>). ",
               "Therefore, if your dataset includes multiple experiments per study and/or ",
-              "shared control groups, this dependence is is accommodated by the modeling."
+              "shared control groups, this dependence is accommodated by the modeling."
             ))
           ),
           
@@ -507,16 +464,18 @@ ui <- page_navbar(
               "it means 80% of experiments in the dataset had pooled SD ≤ 24.5%."
             ),
             p(HTML(
-              "overestimated due to publication bias in preclinical literature (e.g., ",
-              "<a href='https://doi.org/10.1371/journal.pbio.1000344' target='_blank'>",
-              "Sena et al., 2010</a>); low power also inflates observed effects ",
+              "When based only on published experiments, pooled effect sizes may be ",
+              "overestimated because positive findings are more likely to be reported ",
+              "(e.g., <a href='https://doi.org/10.1371/journal.pbio.1000344' target='_blank'>",
+              "Sena et al., 2010</a>); low power, often noted in preclinical studies, ",
+              "can also exaggerate observed effects",
               "(<a href='https://doi.org/10.1038/nrn3475' target='_blank'>Button et al., 2013</a>). ",
               "To temper optimism while retaining clinical ",
               "relevance, the app allows you to power the study to detect ",
               "\\(0.8\\hat{\\mu}\\) or \\(0.5\\hat{\\mu}\\). This is more conservative ",
               "(increases the per-group sample size), but it reduces the risk of ",
-              "underpowered results and of avoidable follow-up studies, supporting ",
-              "3Rs (Reduction) at the program level."
+              "underpowered results and of avoidable follow-up studies, thus supporting ",
+              "the 3Rs (Reduction) at the program level."
             ))
           ),
           
@@ -533,7 +492,7 @@ ui <- page_navbar(
                 tags$i("European Journal of Neuroscience")
               ),
               br(),
-              "Raw and processed data, along with scripts for the paper: ",
+              "Data and scripts for the paper: ",
               tags$a(
                 href = "https://osf.io/vzjys/",
                 target = "_blank",
