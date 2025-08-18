@@ -1,12 +1,9 @@
-library(bslib)
+
 
 theme <- bs_theme(
   version = 5,
   bootswatch = "flatly",
   primary = "#0B7285",
-
-  "nav-link-color" = "bs-primary-text-emphasis",
-
   base_font = font_google("Inter"),
   code_font  = font_google("Fira Mono"),
   heading_font = font_google("Inter")
@@ -20,6 +17,15 @@ theme <- bslib::bs_add_rules(theme, "
   }
 ")
 
+# Nav link colors
+theme <- bslib::bs_add_rules(theme, "
+  .nav {
+    --bs-nav-link-color: var(--bs-primary-text-emphasis) !important;
+    --bs-nav-link-hover-color: var(--bs-primary);
+  }
+  "
+)
+
 # Left panel input blocks spacing
 theme <- bslib::bs_add_rules(theme, "
   .input-block { margin-bottom: .75rem; display: flow-root; }
@@ -30,13 +36,11 @@ theme <- bslib::bs_add_rules(theme, "
   "
 )
 
-# Two-column header layout
+# The gap between columns
 theme <- bslib::bs_add_rules(theme, "
   .cols-tight {
     --tight-gap: 0.75rem;
     gap: var(--tight-gap) !important;
-    padding-left: var(--tight-gap);
-    padding-right: var(--tight-gap);
   }
   "
 )

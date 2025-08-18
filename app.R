@@ -29,12 +29,10 @@ ui <- page_navbar(
       col_widths = c(3, 9),
       class = "cols-tight mt-3",
   
-      #------------ RIGHT: Settings  ------------
+      #------------ LEFT: Settings  ------------
       card(
         class = "sidebar-card",
-        card_header(
-          "Settings"
-        ),
+        card_header("Settings"),
   
         # Dataset choice
         div(
@@ -224,20 +222,25 @@ ui <- page_navbar(
           bslib::accordion_panel(
             "Quick start",
             p(
-              "This app takes a set of experiment-level effect sizes, performs a ",
-              "meta-analysis to produce a pooled benchmark, and then uses that ",
-              "benchmark to calculate how many animals per group you’ll need",
-              "for a new study."
+              "This app aggregates experiment-level effect sizes, runs a meta-analysis ",
+              "to form a pooled benchmark, and uses it to compute per-group sample size ",
+              "for your new study."
             ),
+            p(HTML(
+              "The aim is to plan studies that can detect a <strong>biologically",
+              " meaningful </strong> effect – large enough to matter and, ideally,",
+              " predictive of successful translation into an effective treatment",
+              " (not just something <a href=",
+              "'https://vdoc.pub/documents/statistical-issues-in-drug-development-6u0vjgmpsmh0'",
+              "target='_blank'>cynically relevant</a>)."
+            )),
+            
             p(
-              "The aim is to plan studies that can detect a biologically meaningful ",
-              "effect – large enough to matter and, ideally, predictive of successful ",
-              "translation into an effective treatment."
-            ),
-            p(
-              "We define this target effect using data from human-proven drugs.",
-              " This ensures that the effect your study is designed to detect",
-              " is tied to known clinical relevance."
+              "This app suggests defining the target effect from drugs with established ",
+              "efficacy in humans that were also tested in the animal model you plan to ",
+              "use. A pooled estimate from those experiments shows what a clinically ",
+              "relevant effect looks like in that model and provides a solid target for ",
+              "powering your study."
             ),
             p("Two ways to get started:"),
             tags$ol(
@@ -253,8 +256,7 @@ ui <- page_navbar(
                 )
               ),
               tags$li(
-                "Upload your own dataset – apply the same approach to any animal model, ",
-                "by preparing your data in the required format (see below)."
+                "Upload your own dataset prepared in the required format (see below)."
               )
             )
           ),
@@ -424,18 +426,18 @@ ui <- page_navbar(
               "then 80% of experiments in the dataset had pooled SD ≤ 24.5%."
             ),
             p(
-              "When datasets consist only of published experiments, pooled effects are ",
-              "often overestimated due to publication bias in preclinical literature ",
-              "(e.g., ",
-              tags$a(href = "https://doi.org/10.1371/journal.pbio.1000344", target = "_blank",
-                     "Sena et al., 2010"),
-              "; low power also inflates observed effects, see ",
-              tags$a(href = "https://doi.org/10.1038/nrn3475", target = "_blank",
-                     "Button et al., 2013"),
-              "). To guard against optimism while retaining clinical relevance, the app ",
-              "lets you plan for 80% or 50% of \\(\\hat{\\mu}\\). This can reduce the ",
-              "required number of animals in line with the 3Rs principle ",
-              "(Reduction) yet still target a meaningful, translational effect."
+              "When datasets include only published experiments, pooled effects are often ",
+              "overestimated due to publication bias in preclinical literature (e.g., ",
+              tags$a(href = "https://doi.org/10.1371/journal.pbio.1000344",
+                     target = "_blank", "Sena et al., 2010"),
+              "); low power also inflates observed effects (",
+              tags$a(href = "https://doi.org/10.1038/nrn3475",
+                     target = "_blank", "Button et al., 2013"),
+              "). To temper optimism while retaining clinical relevance, the app lets you ",
+              "power the study to detect 80% or 50% of \\(\\hat{\\mu}\\). This is more ",
+              "conservative (increases the per-group sample size), but it ",
+              "reduces the risk of underpowered results and avoidable follow-up studies, ",
+              "supporting 3Rs (Reduction) at the higher level."
             )
           ),
           bslib::accordion_panel(
