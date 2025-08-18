@@ -7,3 +7,5 @@
 *.Rmd
 
 .cursor/
+docs/
+materials/
