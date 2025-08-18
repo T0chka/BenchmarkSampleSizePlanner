@@ -24,12 +24,12 @@ ui <- page_navbar(
   ),
   fillable = TRUE,
   header = tagList(
-      shinyjs::useShinyjs(),
-      layout_columns(
+    shinyjs::useShinyjs(),
+    layout_columns(
       col_widths = c(3, 9),
       class = "cols-tight mt-3",
   
-      #------------ LEFT: Settings  ------------
+      # --- LEFT: Settings -----------------------------------------------------
       card(
         class = "sidebar-card",
         card_header("Settings"),
@@ -39,7 +39,7 @@ ui <- page_navbar(
           class = "input-block",
           radioButtons(
             inputId = "data_source",
-            label   = tags$h5("Dataset for meta-analysis"),
+            label   = "Dataset for meta-analysis",
             choices = c(
               "Use curated EMTVN dataset" = "paper",
               "Upload dataset"            = "custom"
@@ -47,7 +47,7 @@ ui <- page_navbar(
           )
         ),
   
-        # Upload UI (only when uploading)
+        # Upload
         conditionalPanel(
           condition = "input.data_source == 'custom' && output.data_ready != 1",
           div(
@@ -66,8 +66,8 @@ ui <- page_navbar(
         ),
         actionButton(
           inputId = "load_data",
-          label = "Load data",
-          class = "btn btn-primary w-100"
+          label   = "Load data",
+          class   = "btn btn-primary w-100"
         ),
   
         # Outcome + planning choices (after data ready)
@@ -76,12 +76,13 @@ ui <- page_navbar(
   
           uiOutput("outcome_picker"),
   
-          # EFFECT target: discrete buckets
+          # Target effect: discrete buckets
           div(
             class = "input-block",
+            
             radioButtons(
               inputId = "effect_level",
-              label   = tags$h5("Target effect to detect"),
+              label   = "Target effect to detect",
               choiceNames = list(
                 tagList(
                   "Large ",
@@ -117,12 +118,12 @@ ui <- page_navbar(
             )
           ),
   
-          # POOLED SD: percentile buckets
+          # Pooled SD: percentile buckets
           div(
             class = "input-block",
             radioButtons(
               inputId = "sd_bucket",
-              label   = tags$h5("Expected variability"),
+              label   = "Expected variability",
               choiceNames = list(
                 tagList(
                   "Low ",
@@ -166,17 +167,15 @@ ui <- page_navbar(
             class = "input-block",
             radioButtons(
               inputId = "power",
-              label = tags$h5(
-                tagList(
-                  "Power ",
-                  tags$span(
-                    "\u2139",
-                    title = paste0(
-                      "80% power is a solid default unless you know exactly ",
-                      "why you’d change it"
-                    ),
-                    class = "info-icon"
-                  )
+              label = tagList(
+                "Power ",
+                tags$span(
+                  "\u2139",
+                  title = paste0(
+                    "80% power is a solid default unless you know exactly ",
+                    "why you’d change it"
+                  ),
+                  class = "info-icon"
                 )
               ),
               choices = c(
@@ -196,9 +195,9 @@ ui <- page_navbar(
         )
       ),
   
-      #------------ RIGHT: Tabs ------------
+      # --- RIGHT: Tabs --------------------------------------------------------
       
-      layout_columns(
+      tagList(
         navset_card_tab(
           nav_panel(
             "Results",
@@ -219,6 +218,8 @@ ui <- page_navbar(
         ),
         
         bslib::accordion(
+          
+          # --- Quick start ----------------------------------------------------
           bslib::accordion_panel(
             "Quick start",
             p(
@@ -228,31 +229,28 @@ ui <- page_navbar(
             ),
             p(HTML(
               "The aim is to plan studies that can detect a <strong>biologically",
-              " meaningful </strong> effect – large enough to matter and, ideally,",
-              " predictive of successful translation into an effective treatment",
-              " (not just something <a href=",
-              "'https://vdoc.pub/documents/statistical-issues-in-drug-development-6u0vjgmpsmh0'",
-              "target='_blank'>cynically relevant</a>)."
+              " meaningful</strong> effect – large enough to matter and, ideally,",
+              " predictive of successful translation into an effective treatment.",
             )),
             
             p(
               "This app suggests defining the target effect from drugs with established ",
               "efficacy in humans that were also tested in the animal model you plan to ",
               "use. A pooled estimate from those experiments shows what a clinically ",
-              "relevant effect looks like in that model and provides a solid target for ",
-              "powering your study."
+              "relevant effect looks like in that model, providing a solid basis ",
+              "for designing your study."
             ),
             p("Two ways to get started:"),
             tags$ol(
               tags$li(
                 HTML(
-                  "Use our curated dataset – a prepared set of all published (as of Dec 2021) ",
+                  "Use our curated dataset – a prepared set of all published (as of December 2021) ",
                   "experiments testing clinically effective anti-migraine drugs in the ",
                   "rat electrophysiological model of trigeminovascular nociception ",
-                  "(EMTVN), collected via systematic review ",
+                  "(EMTVN), collected through systematic review ",
                   "(<a href='https://www.crd.york.ac.uk/PROSPERO/view/CRD42021276448' ",
-                  "target='_blank'>protocol</a>). Use this only for planning new experiments ",
-                  "with this particular model."
+                  "target='_blank'>protocol</a>). Use this only to plan new ",
+                  "experiments in this specific model."
                 )
               ),
               tags$li(
@@ -261,20 +259,33 @@ ui <- page_navbar(
             )
           ),
           
+          # --- Prepare your own dataset ---------------------------------------
+          
           bslib::accordion_panel(
             "Prepare your own dataset",
             p(
-              "Use one row per experiment. An experiment is a single comparison of a ",
-              "treatment group and its matched control group within the same study."
+              "Use one row for each experiment. Define an experiment as a single ",
+              "comparison between a treatment group and its matched control group ",
+              "within the same study."
             ),
             p("Required columns:"),
             tags$ul(
-              tags$li("Study.ID – numeric; unique study identifier."),
-              tags$li("Exp.ID – numeric; unique identifier for each experiment within a study."),
+              tags$li("StudyID – numeric; unique study identifier."),
+              tags$li(
+                "ExpID – numeric; unique identifier for each experiment within a ",
+                "study."
+              ),
               tags$li("Outcome – character; endpoint label for grouping."),
-              tags$li("MD – numeric; effect size (mean difference, same units for all rows)."),
-              tags$li("SE – numeric; standard error of MD."),
-              tags$li("Spooled – numeric; pooled SD used to derive SE.")
+              tags$li(
+                "EffectSize – numeric; effect estimate. Use one metric consistently ",
+                "across all rows."
+              ),
+              tags$li("SE – numeric; standard error of EffectSize."),
+              tags$li(
+                "Spooled – numeric; pooled (combined) standard deviation across ",
+                "treatment and control groups that will be used in sample-size ",
+                "calculation."
+              )
             ),
             p("Optional columns:"),
             tags$ul(
@@ -282,32 +293,100 @@ ui <- page_navbar(
               tags$li("Reference – character; citation or short study name.")
             ),
             p(
-              "For an example of how such a dataset can be collected via a systematic ",
-              "search, see our ",
+              "Supported effect-size types can be found in the documentation for ",
               tags$a(
-                href = "https://doi.org/10.1111/ejn.16030",
-                target = '_blank',
-                "published study"
-              ), "."
-            )
-          ),
-          bslib::accordion_panel(
-            "Data pre-processing",
-            p(
-              "Before running the meta-analysis, the app automatically screens the dataset ",
-              "for potential outliers and influential cases. This helps ensure that the pooled ",
-              "benchmark is not distorted by a few atypical experiments."
+                href = "https://wviechtb.github.io/metafor/reference/rma.mv.html",
+                target = "_blank",
+                "rma.mv {metafor}"
+              ), ". The implementation used by the app is shown in the section below."
             ),
             p(
-              HTML(
-                "Potential outliers are flagged via standardized deleted residuals ",
-                "(\\(|\\text{residual}| > 1.96\\)) and influential cases via Cook’s distances (\\(4 / n\\), ",
-                "where \\(n\\) is the number of data points; ",
-                "<a href='https://doi.org/10.1201/9781315119403' target='_blank'>",
-                "Schmid et&nbsp;al., 2020</a>). Influential outliers are removed."
+              "For guidance on calculating EffectSize, SE, and Spooled, including ",
+              "mean differences, standardized mean differences, and other common ",
+              "effect-size metrics, we recommend ",
+              tags$a(
+                href = "https://www.sciencedirect.com/science/article/pii/S016502701300321X",
+                target = "_blank",
+                "Vesterinen et al. (2014)"
+              ),
+              ". This paper provides step-by-step formulas for most cases you are ",
+              "likely to encounter in preclinical datasets."
+            )
+          ),
+          
+          # --- Data checks ----------------------------------------------------
+          
+          bslib::accordion_panel(
+            "Data checks",
+            withMathJax(
+              p(
+                "Before running the meta-analysis, the app automatically screens ",
+                "the dataset for potential outliers and influential cases. This ",
+                "helps ensure that the pooled benchmark is not distorted by a few ",
+                "atypical experiments."
+              ),
+              p(
+                HTML(
+                  "Potential outliers are flagged via standardized deleted ",
+                  "residuals (\\(|\\text{residual}| > 1.96\\)) and influential ",
+                  "cases via Cook’s distance (\\( D_i > 4/n \\), where \\(n\\) is ",
+                  "the number of data points; <a href=",
+                  "'https://doi.org/10.1201/9781315119403' target='_blank'>",
+                  "Handbook of Meta-Analysis</a>, Schmid et&nbsp;al., 2020). We ",
+                  "remove only influential outliers i.e., points meeting both criteria."
+                )
               )
             )
           ),
+          
+          # Effect size & variance calculation ---------------------------------
+          
+          bslib::accordion_panel(
+            "Effect size & variance calculation",
+            withMathJax(
+              p(
+                "To derive the required per-experiment values, ",
+                "use the following definitions (following ",
+                tags$a(
+                  href = "https://www.sciencedirect.com/science/article/pii/S016502701300321X",
+                  target = "_blank",
+                  "Vesterinen et al., 2014"
+                ),
+                "):"
+              ),
+              p(
+                "Experiment-level effect size (\\(\\mathit{MD}\\)) is the difference ",
+                "between the mean in the treatment group (\\(M_t\\)) and the mean in the ",
+                "control group (\\(M_c\\)):"
+              ),
+              p("$$\\mathit{MD} = M_t - M_c$$"),
+              p(
+                "Pooled standard deviation (\\(S_{\\mathit{pooled}}\\)) combines the ",
+                "within-group standard deviations (\\(SD_c, SD_t\\)), weighted by ",
+                "degrees of freedom (\\(N_c - 1, N_t - 1\\)):"
+              ),
+              p(
+                "$$S_{\\mathit{pooled}} = ",
+                "\\sqrt{\\frac{(N_c - 1)\\,SD_c^{2} + (N_t - 1)\\,SD_t^{2}}{N - 2}}$$"
+              ),
+              p("Standard error of the mean difference:"),
+              p(
+                "$$\\mathit{SE} = \\sqrt{\\frac{N}{N_t \\times N_c}}\\,",
+                "S_{\\mathit{pooled}}$$"
+              ),
+              p("where \\(N = N_t + N_c\\).")
+            ),
+            withMathJax(
+              p(
+                "In the curated dataset, outcomes were measured as a percentage of ",
+                "baseline neuronal activity; thus \\(\\mathit{MD}\\) is the absolute ",
+                "difference in percentage points between treatment and control."
+              )
+            )
+          ),
+          
+          # --- Meta-analytic model --------------------------------------------
+          
           bslib::accordion_panel(
             "Meta-analytic model",
             withMathJax(
@@ -351,7 +430,7 @@ ui <- page_navbar(
                                   "sampling variance: \\(v_{ij} = SE_{ij}^{2}\\) (from the input)."
                                 )),
                                 tags$li(HTML(
-                                  "estimation uses REML and the marginal variance of \\(MD_{ij}\\) is ",
+                                  "estimation uses REML, and the marginal variance of \\(MD_{ij}\\) is ",
                                   "\\(SE_{ij}^{2} + \\tau^2_{exp} + \\tau^2_{study}\\)."
                                 ))
                               )
@@ -360,7 +439,7 @@ ui <- page_navbar(
                     )
                 ),
                 
-                # RIGHT: wider code box
+                # RIGHT: code box
                 div(class = "col-sm-5",
                     div(class = "card-box",
                         {
@@ -386,13 +465,15 @@ ui <- page_navbar(
               "We do not require all experiments to be identical – the model explicitly ",
               "allows them to differ with two sources of heterogeneity (between studies ",
               "and between experiments within studies). Study-level cluster-robust ",
-              "standard errors are computed with the small-sample adjustment ",
-              " in <code>metafor::robust()</code> ",
+              "standard errors are computed using <code>metafor::robust()</code> ",
+              "with a small-sample correction ",
               "(<a href='https://doi.org/10.1002/jrsm.5' target='_blank'>Hedges et&nbsp;al., 2010</a>). ",
               "Therefore, if your dataset includes multiple experiments per study and/or ",
-              "shared control groups, this dependence is handled by the model."
+              "shared control groups, this dependence is is accommodated by the modeling."
             ))
           ),
+          
+          # --- Sample size calculation ----------------------------------------
           
           bslib::accordion_panel(
             "Sample size calculation",
@@ -400,18 +481,18 @@ ui <- page_navbar(
               p(
                 "The app uses the pooled estimate \\(\\hat{\\mu}\\) from the meta-analysis ",
                 "as the benchmark effect size. The per-group sample size is ",
-                "then calculated for your chosen power using the Wilcoxon–Mann–Whitney ",
-                "test formula (two-sided \\(\\alpha = 0.05\\), allocation ratio 1:1) with ",
-                "a 5% non-parametric correction to match G*Power results."
+                "then calculated for your chosen power using the Mann–Whitney U ",
+                "(Wilcoxon rank-sum) test formula (two-sided, \\(\\alpha = 0.05\\), ",
+                "allocation ratio 1:1) with a 5% nonparametric correction to align ",
+                "with G*Power results."
               )
             ),
             p(
-              "In our work and previous preclinical meta-analyses, pooled standard deviations (SDs) ",
+              "In our work and previous preclinical meta-analyses, standard deviations (SDs) ",
               "varied widely across experiments. It is therefore likely that your dataset ",
               "will also show substantial variability. For this reason, the app allows ",
-              "you to explore scenarios with different pooled SD values – the 20th, 50th, ",
-              "and 80th percentiles of the distribution in the loaded dataset (labelled ",
-              "Low, Median, and High variability).",
+              "you to explore scenarios with different pooled SD at the 20th, 50th, and ",
+              "80th percentiles of the loaded dataset (labeled Low, Median, and High variability).",
               "Choosing a higher percentile yields a more conservative (larger) sample size."
             ),
             div(
@@ -423,50 +504,147 @@ ui <- page_navbar(
                 "margin-bottom: 0.8em;"
               ),
               "Example: If the 80th percentile pooled SD (High variability) is 24.5%, ",
-              "then 80% of experiments in the dataset had pooled SD ≤ 24.5%."
+              "it means 80% of experiments in the dataset had pooled SD ≤ 24.5%."
             ),
-            p(
-              "When datasets include only published experiments, pooled effects are often ",
+            p(HTML(
               "overestimated due to publication bias in preclinical literature (e.g., ",
-              tags$a(href = "https://doi.org/10.1371/journal.pbio.1000344",
-                     target = "_blank", "Sena et al., 2010"),
-              "); low power also inflates observed effects (",
-              tags$a(href = "https://doi.org/10.1038/nrn3475",
-                     target = "_blank", "Button et al., 2013"),
-              "). To temper optimism while retaining clinical relevance, the app lets you ",
-              "power the study to detect 80% or 50% of \\(\\hat{\\mu}\\). This is more ",
-              "conservative (increases the per-group sample size), but it ",
-              "reduces the risk of underpowered results and avoidable follow-up studies, ",
-              "supporting 3Rs (Reduction) at the higher level."
-            )
+              "<a href='https://doi.org/10.1371/journal.pbio.1000344' target='_blank'>",
+              "Sena et al., 2010</a>); low power also inflates observed effects ",
+              "(<a href='https://doi.org/10.1038/nrn3475' target='_blank'>Button et al., 2013</a>). ",
+              "To temper optimism while retaining clinical ",
+              "relevance, the app allows you to power the study to detect ",
+              "\\(0.8\\hat{\\mu}\\) or \\(0.5\\hat{\\mu}\\). This is more conservative ",
+              "(increases the per-group sample size), but it reduces the risk of ",
+              "underpowered results and of avoidable follow-up studies, supporting ",
+              "3Rs (Reduction) at the program level."
+            ))
           ),
+          
+          # --- Sources & Further Reading --------------------------------------
+          
           bslib::accordion_panel(
             "Sources & data",
             p(
               "Paper: ",
               tags$a(
-                href = "https://doi.org/10.1111/ejn.16030", target = "_blank",
-                "Dolgorukova et al., 2023, Eur J Neurosci"
+                href = "https://doi.org/10.1111/ejn.16030",
+                target = "_blank",
+                "Dolgorukova et al. (2023), ",
+                tags$i("European Journal of Neuroscience")
               ),
               br(),
-              "Raw/processed data and scripts for paper: ",
+              "Raw and processed data, along with scripts for the paper: ",
               tags$a(
-                href = "https://osf.io/vzjys/", target = "_blank",
+                href = "https://osf.io/vzjys/",
+                target = "_blank",
                 "OSF project"
               ),
               br(),
               "GitHub repo: ",
               tags$a(
-                href = "https://github.com/T0chka/BenchmarkSampleSizePlanner.git", target = "_blank",
+                href = "https://github.com/T0chka/BenchmarkSampleSizePlanner.git",
+                target = "_blank",
                 "BenchmarkSampleSizePlanner"
+              )
+            ),
+            tags$hr(),
+            h5("Further reading"),
+            tags$ul(
+              tags$li(
+                tags$a(
+                  href = "https://arriveguidelines.org/",
+                  target = "_blank",
+                  "ARRIVE guidelines 2.0"
+                ),
+                " – reporting standards for animal studies."
+              ),
+              tags$li(
+                tags$a(
+                  href = "https://bmcmedresmethodol.biomedcentral.com/articles/10.1186/1471-2288-14-43",
+                  target = "_blank",
+                  "SYRCLE risk of bias tool"
+                ),
+                " – bias assessment tailored to animal experiments."
+              ),
+              tags$li(
+                tags$a(
+                  href = "https://www.jstatsoft.org/v36/i03/",
+                  target = "_blank",
+                  "Viechtbauer (2010), metafor"
+                ),
+                " – the core reference for meta-analysis in R."
+              ),
+              tags$li(
+                tags$a(
+                  href = "https://onlinelibrary.wiley.com/doi/10.1002/jrsm.5",
+                  target = "_blank",
+                  "Hedges, Tipton & Johnson (2010)"
+                ),
+                " – robust variance for dependent effects."
+              ),
+              tags$li(
+                tags$a(
+                  href = "https://www.nature.com/articles/nrn3475",
+                  target = "_blank",
+                  "Button et al. (2013)"
+                ),
+                " – why small samples undermine reliability."
+              ),
+              tags$li(
+                tags$a(
+                  href = "https://journals.plos.org/plosbiology/article?id=10.1371/journal.pbio.1000344",
+                  target = "_blank",
+                  "Sena et al. (2010)"
+                ),
+                " – publication bias in preclinical literature."
+              ),
+              tags$li(
+                tags$a(
+                  href = "https://link.springer.com/article/10.3758/BRM.41.4.1149",
+                  target = "_blank",
+                  "Faul et al. (2009), G*Power 3.1"
+                ),
+                " – reference for G*Power’s implementation."
+              ),
+              tags$li(
+                tags$a(
+                  href = "https://pubmed.ncbi.nlm.nih.gov/24099992/",
+                  target = "_blank",
+                  "Vesterinen et al. (2014)"
+                ),
+                " – meta-analysis of animal studies: a practical guide."
+              ),
+              tags$li(
+                tags$a(
+                  href = "https://clinical-brain-sciences.ed.ac.uk/camarades/about-camarades",
+                  target = "_blank",
+                  "CAMARADES"
+                ),
+                " – network, training and tools for animal SR & meta-analysis."
+              ),
+              tags$li(
+                tags$a(
+                  href = "https://journals.plos.org/plosmedicine/article?id=10.1371/journal.pmed.0020124",
+                  target = "_blank",
+                  "Ioannidis (2005)"
+                ),
+                " – metascience on power, bias and false-positive claims."
+              ),
+              tags$li(
+                tags$a(
+                  href = "https://onlinelibrary.wiley.com/doi/book/10.1002/9780470723586",
+                  target = "_blank",
+                  "Senn, Statistical Issues in Drug Development (2nd ed.)"
+                ),
+                " – classic on trial design; origin of the ‘cynically relevant’ quip."
               )
             )
           )
-        ),
-        col_widths = c(12, 12)
+          # --- Accordeon end --------------------------------------------------
+        )
       )
     )
-  )  ,
+  ),
   footer = div(
     class = "app-footer",
     "Version 1.0 | © 2025 Antonina Dolgorukova"
@@ -557,7 +735,7 @@ server <- function(input, output, session) {
       class = "input-block",
       radioButtons(
         inputId = "outcome",
-        label = tags$h5("Outcome"),
+        label = "Outcome",
         choices = outs,
         selected = outs[1]
       )
@@ -622,7 +800,7 @@ server <- function(input, output, session) {
     )[input$sd_bucket]
     
     tags$div(
-      h5("Selected inputs for calculation"),
+      p("Selected inputs for calculation"),
       tags$ul(
         tags$li(
           "Studies: ", uniqueN(dt$Study.ID),
