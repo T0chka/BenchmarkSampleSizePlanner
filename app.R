@@ -25,6 +25,7 @@ ui <- page_navbar(
   fillable = TRUE,
   header = tagList(
     shinyjs::useShinyjs(),
+    tags$head(tags$script(HTML(tooltip_js))),
     layout_columns(
       col_widths = c(3, 9),
       class = "cols-tight mt-3",
@@ -82,35 +83,21 @@ ui <- page_navbar(
             
             radioButtons(
               inputId = "effect_level",
-              label   = "Target effect to detect",
-              choiceNames = list(
-                tagList(
-                  "Large ",
-                  tags$span(
-                    "(≈100%)",
-                    title = paste0(
-                      "100%: your target effect is at least as large as ",
-                      "the benchmark (pooled MD from the dataset)."
-                    ),
-                    class = "help-hint"
-                  )
-                ),
-                tagList(
-                  "Medium ",
-                  tags$span(
-                    "(≈80%)",
-                    title = "80% of the dataset benchmark MD.",
-                    class = "help-hint"
-                  )
-                ),
-                tagList(
-                  "Small ",
-                  tags$span(
-                    "(≈50%)",
-                    title = "50% of the dataset benchmark MD.",
-                    class = "help-hint"
-                  )
+              label   = tagList(
+                "Target effect to detect",
+                tags$span(
+                  "\u2139",
+                  `data-hint` = paste0(
+                    "Set the minimum effect you plan to reliably detect ",
+                    "as a fraction of the benchmark"
+                  ),
+                  class = "hint hint-icon"
                 )
+              ),
+              choiceNames = list(
+                tagList("Large (≈100%)"),
+                tagList("Medium (≈80%)"),
+                tagList("Small (≈50%)")
               ),
               choiceValues = c("large", "medium", "small"),
               selected = "large",
@@ -123,38 +110,22 @@ ui <- page_navbar(
             class = "input-block",
             radioButtons(
               inputId = "sd_bucket",
-              label   = "Expected variability",
-              choiceNames = list(
-                tagList(
-                  "Low ",
-                  tags$span(
-                    "(20th percentile)",
-                    title = paste0(
-                      "20th percentile of pooled SD in the loaded dataset."
-                    ),
-                    class = "help-hint"
-                  )
-                ),
-                tagList(
-                  "Median ",
-                  tags$span(
-                    "(50th percentile)",
-                    title = paste0(
-                      "50th percentile (median) of pooled SD in the dataset."
-                    ),
-                    class = "help-hint"
-                  )
-                ),
-                tagList(
-                  "High ",
-                  tags$span(
-                    "(80th percentile)",
-                    title = paste0(
-                      "80th percentile of pooled SD in the loaded dataset."
-                    ),
-                    class = "help-hint"
-                  )
+              label   = tagList(
+                "Expected variability",
+                tags$span(
+                  "\u2139",
+                  `data-hint` = paste0(
+                    "Select the percentile of pooled SD from your dataset ",
+                    " (the value below which that % of experiments falls). ",
+                    "Higher percentiles mean greater variability."
+                  ),
+                  class = "hint hint-icon"
                 )
+              ),
+              choiceNames = list(
+                tagList("Low (20th percentile)"),
+                tagList("Median (50th percentile)"),
+                tagList("High (80th percentile)")
               ),
               choiceValues = c("p20", "p50", "p80"),
               selected = "p80",
@@ -168,14 +139,15 @@ ui <- page_navbar(
             radioButtons(
               inputId = "power",
               label = tagList(
-                "Power ",
+                "Power",
                 tags$span(
                   "\u2139",
-                  title = paste0(
-                    "80% power is a solid default unless you know exactly ",
-                    "why you’d change it"
+                  `data-hint` = paste0(
+                    "Probability of correctly detecting the effect if it exists. ",
+                    "Solid default is 80%. Use 85–95% when false negatives ",
+                    "are costly or reruns are unlikely."
                   ),
-                  class = "info-icon"
+                  class = "hint hint-icon"
                 )
               ),
               choices = c(

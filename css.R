@@ -9,6 +9,20 @@ theme <- bs_theme(
   heading_font = font_google("Inter")
 )
 
+theme <- bslib::bs_add_rules(theme, "
+  :root {
+    --bs-link-color: #0B7285;
+    --bs-link-hover-color: #085c6b;
+  }
+")
+
+theme <- bslib::bs_add_rules(theme, "
+  a { color: var(--bs-link-color) !important; }
+  a:hover { color: var(--bs-link-hover-color) !important; }
+")
+
+
+
 # Navigation -------------------------------------------------------------------
 
 # Navbar brand styling (Title and subtitle)
@@ -158,9 +172,102 @@ theme <- bslib::bs_add_rules(theme, "
 
 # Tooltips ---------------------------------------------------------------------
 
-# Help hint and info icon styles for tooltips
 theme <- bslib::bs_add_rules(theme, "
-  .help-hint { cursor: help; }
-  .info-icon { cursor: help; font-weight: 600; }
-  "
-)
+.hint {
+  cursor: help;
+  color: var(--bs-primary);
+  font-weight: 500;
+  position: relative;
+  --tt-x: 0px;
+  --tt-y: 0px;
+  --tt-maxw: 320px;
+  --tt-gap: 10px;
+  --tt-pad: 8px 12px;
+  --tt-radius: 10px;
+  --tt-shadow: 0 12px 28px rgba(0,0,0,.12);
+}
+
+.hint::after {
+  content: attr(data-hint);
+  position: fixed;
+  left: var(--tt-x);
+  top: var(--tt-y);
+  transform: translate(12px, calc(-100% - var(--tt-gap)));
+  background: var(--bs-tertiary-bg);
+  color: var(--bs-body-color);
+  border: 1px solid var(--bs-border-color);
+  border-radius: var(--tt-radius);
+  padding: var(--tt-pad);
+  max-width: var(--tt-maxw);
+  box-shadow: var(--tt-shadow);
+  white-space: normal;
+  overflow-wrap: anywhere;
+  pointer-events: none;
+  z-index: 1002;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity .12s ease, visibility .12s ease;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.hint:hover::after { opacity: 1; visibility: visible; }
+
+.hint::before {
+  content: '';
+  position: fixed;
+  left: var(--tt-x);
+  top: var(--tt-y);
+  transform: translate(12px, -6px);
+  width: 10px;
+  height: 10px;
+  background: var(--bs-tertiary-bg);
+  border-left: 1px solid var(--bs-border-color);
+  border-top: 1px solid var(--bs-border-color);
+  box-shadow: -2px -2px 6px rgba(0,0,0,.04);
+  z-index: 1001;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity .12s ease, visibility .12s ease;
+  clip-path: polygon(0 0, 100% 0, 0 100%);
+}
+
+.hint:hover::before { opacity: 1; visibility: visible; }
+
+.hint[data-pos='bottom']::after {
+  transform: translate(12px, var(--tt-gap));
+}
+
+.hint[data-pos='bottom']::before {
+  transform: translate(12px, 6px) rotate(180deg);
+}
+")
+
+theme <- bslib::bs_add_rules(theme, "
+.hint-icon {
+  font-size: 1rem;
+  color: var(--bs-secondary-color);
+  margin-left: 3px;
+  cursor: help;
+  opacity: 0.7;
+  vertical-align: super;
+  line-height: 1;
+}
+.hint-icon:hover { opacity: 1; }
+")
+
+# JS ---------------------------------------------------------------------------
+
+tooltip_js <- "
+document.addEventListener('mousemove', function(e){
+  const t = e.target.closest('.hint');
+  if(!t) return;
+  const maxW = 320, margin = 16;
+  let x = e.clientX, y = e.clientY;
+  x = Math.min(x, window.innerWidth - maxW - margin);
+  t.style.setProperty('--tt-x', x + 'px');
+  t.style.setProperty('--tt-y', y + 'px');
+  if (y < 90) t.setAttribute('data-pos','bottom');
+  else t.removeAttribute('data-pos');
+});
+"
