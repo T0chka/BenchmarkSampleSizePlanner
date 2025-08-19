@@ -139,6 +139,61 @@ theme <- bslib::bs_add_rules(theme, "
 
 # Results rection --------------------------------------------------------------
 
+theme <- bslib::bs_add_rules(theme, "
+:root{
+    --sample-size-label-font-size: .8rem;
+    --sample-size-value-font-size: 2rem;
+    --badge-font-size: .85rem;
+  }
+  .metric{
+    border:1px solid var(--bs-border-color);
+    border-radius:var(--bs-border-radius);
+    padding:.25rem .6rem;
+    background:var(--bs-body-bg);
+    font-size:var(--badge-font-size);
+  }
+
+  .parameters-stack{
+    display: flex;
+    flex-direction: column;
+    gap: .5rem;
+  }
+  .parameters-stack > .metric{
+    align-self: flex-start;
+    width: max-content;
+  }
+  .result-box .card-body{
+    display:flex;
+    align-items:center;
+    gap:.75rem;
+  }
+  
+  .bslib-value-box .value-box-value{
+    font-size: 1rem !important;
+    text-align: left !important;
+    overflow-x: clip;
+    margin-bottom: 0 !important;
+    column-gap: 0;
+  }
+  .bslib-value-box .value-box-area{
+    padding: 1.5rem 1.5rem 1.5rem 1rem !important;
+    flex-direction: row !important;
+    align-items: center;
+  }
+  
+  .sample-size-label{
+    font-size:var(--sample-size-label-font-size);
+    color:var(--bs-secondary-color);
+    text-transform:uppercase;
+    letter-spacing:.02em;
+    margin-bottom:.1rem;
+  }
+  .sample-size-value{
+    font-size:var(--sample-size-value-font-size);
+    font-weight:500;
+  }
+")
+
 # value-box
 theme <- bslib::bs_add_rules(theme, "
   .value-box {

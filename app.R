@@ -9,6 +9,8 @@ library(shinycssloaders)
 source("utils.R")
 source("css.R")
 
+# UI ---------------------------------------------------------------------------
+
 ui <- page_navbar(
   theme = theme,
   title = tags$div(
@@ -173,11 +175,7 @@ ui <- page_navbar(
         navset_card_tab(
           nav_panel(
             "Results",
-            layout_columns(
-              col_widths = c(8, 4),
-              uiOutput("calc_summary"),
-              uiOutput("n_box")
-            )
+            uiOutput("results_summary")
           ),
   
           nav_panel(
@@ -582,6 +580,7 @@ ui <- page_navbar(
   )
 )
 
+# Server -----------------------------------------------------------------------
 
 server <- function(input, output, session) {
   raw_data <- reactiveVal(NULL)
@@ -705,44 +704,50 @@ server <- function(input, output, session) {
     ss_calc(md = pick_md(), sd = pick_sd(), power = pick_power())
   })
   
-  output$n_box <- renderUI({
+  output$results_summary <- renderUI({
     req(load_ok())
-    n <- n_calc()
-    val <- if (is.na(n)) "Insufficient inputs" else as.character(n)
-    bslib::value_box(
-      title = "Animals per group",
-      value = tags$span(val),
-      showcase = bsicons::bs_icon("calculator")
-    )
-  })
-  
-  output$calc_summary <- renderUI({
-    if (!isTRUE(load_ok())) return(tags$p("Load a dataset to begin"))
-    
     dt_filt <- filter_data()
     dt <- remove_outliers()
     md_used <- pick_md()
     sd_used <- pick_sd()
-    lvl_label <- c(
-      large = "(Large)", medium = "(Medium)", small = "(Small)"
-    )[input$effect_level]
-    sd_label  <- c(
-      p20 = "(Low)", p50 = "(Medium)", p80 = "(High)"
-    )[input$sd_bucket]
+    lvl_label <- c(large="(Large)", medium="(Medium)", small="(Small)")[
+      input$effect_level
+    ]
+    sd_label <- c(p20="(Low)", p50="(Median)", p80="(High)")[input$sd_bucket]
+    pwr <- paste0(round(as.numeric(input$power) * 100), "%")
+    n   <- n_calc()
     
-    tags$div(
-      p("Selected inputs for calculation"),
-      tags$ul(
-        tags$li(
-          "Studies: ", uniqueN(dt$Study.ID),
-          ", experiments: ", uniqueN(dt$Exp.ID),
-          paste0(" (", nrow(dt_filt) - nrow(dt), " outliers excluded)")
-        ),
-        tags$li("Outcome:", paste0(" ", input$outcome)),
-        tags$li("Target effect (MD): ", paste(round(md_used, 2), lvl_label)),
-        tags$li("Expected variability (SD): ", paste(round(sd_used, 2), sd_label))
+    params_stack <- tags$div(
+      class = "parameters-stack",
+      tags$span(class="metric", paste0(
+        "Studies: ", uniqueN(dt$Study.ID),
+        ", experiments: ", uniqueN(dt$Exp.ID),
+        " (", nrow(dt_filt) - nrow(dt), " outliers excluded)"
+      )),
+      tags$span(class="metric", paste("Outcome:", input$outcome)),
+      tags$span(
+        class="metric",
+        paste0("Target effect (MD): ", round(md_used, 2), " ", lvl_label)
+      ),
+      tags$span(
+        class="metric",
+        paste0("Expected SD: ", round(sd_used, 2), " ", sd_label)
+      ),
+      tags$span(class="metric", paste0("Power: ", pwr))
+    )
+    
+    calculator_box <- bslib::value_box(
+      title = NULL,
+      class = "result-box",
+      showcase = bsicons::bs_icon("calculator"),
+      value = tags$div(
+        class = "valuebox-simple",
+        tags$div(class = "sample-size-label", "Animals per group"),
+        tags$div(class = "sample-size-value", n)
       )
     )
+    
+    layout_columns(col_widths = c(8, 4), params_stack, calculator_box)
   })
   
   output$raw_table <- DT::renderDataTable({
