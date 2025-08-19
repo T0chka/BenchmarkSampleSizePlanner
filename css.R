@@ -155,7 +155,7 @@ theme <- bslib::bs_add_rules(theme, "
 
   .parameters-stack{
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     gap: .5rem;
   }
   .parameters-stack > .metric{

@@ -710,36 +710,36 @@ server <- function(input, output, session) {
     dt <- remove_outliers()
     md_used <- pick_md()
     sd_used <- pick_sd()
-    lvl_label <- c(large="(Large)", medium="(Medium)", small="(Small)")[
-      input$effect_level
-    ]
+    lvl_label <- c(large="(Large)", medium="(Medium)", small="(Small)")[input$effect_level]
     sd_label <- c(p20="(Low)", p50="(Median)", p80="(High)")[input$sd_bucket]
     pwr <- paste0(round(as.numeric(input$power) * 100), "%")
     n   <- n_calc()
     
-    params_stack <- tags$div(
+    context_pills <- tags$div(
       class = "parameters-stack",
-      tags$span(class="metric", paste0(
-        "Studies: ", uniqueN(dt$Study.ID),
-        ", experiments: ", uniqueN(dt$Exp.ID),
-        " (", nrow(dt_filt) - nrow(dt), " outliers excluded)"
-      )),
       tags$span(class="metric", paste("Outcome:", input$outcome)),
       tags$span(
         class="metric",
-        paste0("Target effect (MD): ", round(md_used, 2), " ", lvl_label)
-      ),
-      tags$span(
-        class="metric",
-        paste0("Expected SD: ", round(sd_used, 2), " ", sd_label)
-      ),
-      tags$span(class="metric", paste0("Power: ", pwr))
+        paste0(
+          "Studies: ", uniqueN(dt$Study.ID),
+          ", experiments: ", uniqueN(dt$Exp.ID),
+          " (", nrow(dt_filt) - nrow(dt), " excluded)"
+        )
+      )
+    )
+    
+    params_list <- tags$div(
+      class = "params-list",
+      tags$div(paste0("Target effect: ", round(md_used, 2), " ", lvl_label)),
+      tags$div(paste0("Expected SD: ", round(sd_used, 2), " ", sd_label)),
+      tags$div(paste0("Power: ", pwr)),
+      tags$div(class="muted", "Mann–Whitney U, two-sided \u03B1=0.05, 1:1")
     )
     
     calculator_box <- bslib::value_box(
       title = NULL,
       class = "result-box",
-      showcase = bsicons::bs_icon("calculator"),
+      showcase = bsicons::bs_icon("calculator"),  # <— иконка вернулась
       value = tags$div(
         class = "valuebox-simple",
         tags$div(class = "sample-size-label", "Animals per group"),
@@ -747,7 +747,11 @@ server <- function(input, output, session) {
       )
     )
     
-    layout_columns(col_widths = c(8, 4), params_stack, calculator_box)
+    layout_columns(
+      col_widths = c(8, 4),
+      tagList(context_pills, params_list),
+      calculator_box
+    )
   })
   
   output$raw_table <- DT::renderDataTable({
